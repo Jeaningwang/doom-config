@@ -23,7 +23,9 @@
 ;;
 ;;(setq doom-font (font-spec :family "Fira Code" :size 12 :weight 'semi-light)
 ;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
-(setq doom-font (font-spec :family "SauceCodePro NF" :size 18 :weight 'normal))
+(setq doom-font (font-spec :family "SauceCodePro NF" :size 18 :weight 'normal)
+      doom-variable-pitch-font (font-spec :family "SauceCodePro NF" :size 12 :weight 'bold)
+      )
 
 ;; Emacs 启动的时候，使窗口最大化
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
