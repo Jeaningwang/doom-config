@@ -1,0 +1,61 @@
+﻿# run `git config --global core.excludesfile ~/.gitignore`
+
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store
+.vscode
+Thumbs.db
+
+# idea
+**/.idea/**
+*.iml
+**/out/**
+*.iws
+*.ipr
+modules.xml
+
+# visual studio
+**/bin/
+**/obj/
+**/.vs/
+
+# java
+**/target/**
+*.class
+
+# gradle
+**/build/**
+**/.gradle/**
+**/gradle/**
+gradlew
+gradlew.bat
+
+# exercism
+**/.exercism/**
+
+# vue
+dist/
+
+# vim
+*.swp
+
+# python
+**/__pycache__/**
+.py[cod]
+*$py.class
+
+# eclipse
+.project
+.classpath
+**/.settings/**
+
+# csharp
+bin/
+obj/
+
+# javascript
+**/node_modules/**
+
+## nodejs
+**/node_modules/

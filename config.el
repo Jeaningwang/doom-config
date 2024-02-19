@@ -8,6 +8,24 @@
 ;; clients, file templates and snippets. It is optional.
 ;; (setq user-full-name "John Doe"
 ;;       user-mail-address "john@doe.com")
+(setq user-full-name "Dong Wang"
+      user-mail-address "moneatts@outlook.com")
+
+(setq-default
+ window-combination-resize t
+ x-stretch-cursor t
+ yas-triggers-in-field t
+ )
+
+(setq
+ undo-limit 80000000
+ auto-save-default t
+ scroll-preserve-screen-position 'always
+ scroll-margin 2
+ word-wrap-by-category t
+ )
+
+(global-subword-mode t)
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
@@ -25,22 +43,28 @@
 ;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
 (cond
  ((featurep :system 'windows)
-  (setq doom-font (font-spec :family "SauceCodePro NF" :size 18 :weight 'regular)
-      doom-variable-pitch-font (font-spec :family "SauceCodePro NF" :size 12 :weight 'bold)
-   )
+  (setq +main-font "SauceCodePro NF")
+  (setq +unicode-font "SauceCodePro NFM")
   (message "window os")
   )
  ((featurep :system 'linux)
-  (setq doom-font (font-spec :family "SauceCodePro NF" :size 18 :weight 'normal)
-      doom-variable-pitch-font (font-spec :family "SauceCodePro NF" :size 12 :weight 'bold)
-   )
+  (setq +main-font "SauceCodePro NF")
+  (setq +unicode-font "SauceCodePro NFM")
   (message "linux os")
   )
  ((featurep :system 'macos)
+  (setq +main-font "SauceCodePro NF")
+  (setq +unicode-font "SauceCodePro NFM")
   (message "mac os")
   )
  (t
   (message "未知的操作系统"))
+ )
+(setq doom-font (font-spec :family +main-font :size 18 :weight 'regular)
+      doom-big-font (font-spec :family +main-font :size 20 :weight 'light)
+      doom-variable-pitch-font (font-spec :family +main-font) ; inherits :size from doom-font
+      doom-serif-font (font-spec :family +main-font :weight 'light)
+      doom-symbol-font (font-spec :family +unicode-font)
  )
 
 ;; Emacs 启动的时候，使窗口最大化
@@ -99,3 +123,90 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
+
+;; treemacs
+(setq +treemacs-git-mode 'extended)
+(after! treemacs
+  :config
+  (setq treemacs-collapse-dirs 200)
+  )
+
+;; plantuml
+;;(setq plantuml-jar-path (concat (expand-file-name user-emacs-directory) "plantuml/plantuml.jar")
+;;      plantuml-default-exec-mode 'jar)
+
+;; modeline
+(after! doom-modeline
+  :custom
+  ;; add padding to the right
+  (doom-modeline-def-modeline 'main
+    '(bar matches buffer-info remote-host buffer-position parrot selection-info)
+    '(misc-info battery checker repl buffer-encoding indent-info major-mode process vcs mu4e time "    "))
+  (doom-modeline-def-modeline 'dashboard
+    '(bar window-number buffer-default-directory-simple remote-host)
+    '(misc-info battery irc mu4e gnus github debug minor-modes input-method major-mode process time "    "))
+  (doom-modeline-def-modeline 'vcs
+    '(bar window-number modals matches buffer-info remote-host buffer-position parrot selection-info)
+    '(misc-info battery irc mu4e gnus github debug minor-modes buffer-encoding major-mode process time "    "))
+  (doom-modeline-def-modeline 'message
+    '(bar window-number modals matches buffer-info-simple buffer-position word-count parrot selection-info)
+    '(objed-state misc-info battery debug minor-modes input-method indent-info buffer-encoding major-mode time "    "))
+  (doom-modeline-def-modeline 'minimal
+    '(bar matches buffer-info-simple)
+    '(media-info major-mode time "    "))
+  (doom-modeline-def-modeline 'special
+    '(bar window-number modals matches buffer-info remote-host buffer-position word-count parrot selection-info)
+    '(objed-state misc-info battery irc-buffers debug minor-modes input-method indent-info buffer-encoding major-mode process time "    "))
+  (doom-modeline-def-modeline 'project
+    '(bar window-number modals buffer-default-directory remote-host buffer-position)
+    '(misc-info battery irc mu4e gnus github debug minor-modes input-method major-mode process time "    "))
+  ;; time on modeline
+  (setq display-time-string-forms
+        '((propertize (concat 24-hours ":" minutes))))
+  (display-time-mode t)
+  ;; battery info on modeline (only on laptops)
+  (let ((battery-str (battery)))
+    (if (string-match-p (regexp-quote "Power Battery") battery-str)
+        (display-battery-mode t)))
+  ;; better default
+  (setq doom-modeline-bar-width 4
+        doom-modeline-hud nil
+        doom-modeline-major-mode-icon t
+        doom-modeline-major-mode-color-icon t
+        doom-modeline-time-icon nil
+        doom-modeline-display-misc-in-all-mode-lines nil
+        doom-modeline-buffer-file-name-style 'auto)
+  )
+
+;; ligature
+(defun +appened-to-negation-list (head tail)
+  (if (sequencep head)
+      (delete-dups
+       (if (eq (car tail) 'not)
+           (append head tail)
+         (append tail head)))
+    tail))
+
+(when (modulep! :ui ligatures)
+  (setq +ligatures-extras-in-modes
+        (+appened-to-negation-list
+         +ligatures-extras-in-modes
+         '(not c-mode c++-mode emacs-lisp-mode python-mode scheme-mode racket-mode rust-mode)))
+  (setq +ligatures-in-modes
+        (+appened-to-negation-list
+         +ligatures-in-modes
+         '(not emacs-lisp-mode scheme-mode racket-mode))))
+
+;; org
+(setq org-agenda-files (directory-files-recursively org-directory "\\.org$"))
+(after! org
+  (setq org-agenda-files
+        (list (expand-file-name "Inbox.org" org-directory)
+              (expand-file-name "Private.org" org-directory)
+              (expand-file-name "Work.org" org-directory)
+              (expand-file-name "Projects.org" org-directory)
+              (expand-file-name "Notes.org" org-directory)
+              )))
+;; org-babel
+(after! org-src
+  (add-to-list 'org-src-lang-modes '("plantuml" . plantuml)))

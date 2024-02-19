@@ -48,3 +48,19 @@
 ;; (unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
+
+(package! org :pin "806abc5a2bbcb5f884467a0145547221ba09eb59")
+(package! ox-hugo :pin "3c8c0bf28cf02128ceff9a972db3ebad01083953")
+(package! jupyter :pin "455166712e606c9c6a8de763ea0a77548cadcef2")
+
+(package! org-roam-ui)
+
+(package! xenops)
+
+(package! python-black)
+
+;; 按键跟踪
+(package! keycast)
+
+;; 漫画
+(package! xkcd)
