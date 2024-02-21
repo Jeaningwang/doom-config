@@ -1,0 +1,57 @@
+﻿[user]
+	name = dong.wang
+	email = moneatts@outlook.com
+[core]
+	autocrlf = input
+	compression = -1
+	quotepath = false
+	# pager = diff-so-fancy | bat --tabs=4
+	pager = less
+	excludesfile = ~/.gitignore
+[alias]
+	co = checkout
+	br = branch
+	ci = commit
+	bean = "ci -am '记账中...'"
+	st = status
+	rs = restore
+	df = diff --color --word-diff --word-diff-regex=. --color-words
+	delete = reset HEAD --
+	last = log --stat -1 HEAD
+	list = config --global --list
+	l = log --all --oneline --graph
+	lg = "log --graph --pretty=format:'%C(#DC143C)%h%Creset %C(yellow)%d%Creset %C(white)%s%Creset %Cgreen[%cr]%C(#C71585)(%cd) %C(bold blue)<%an>%Creset' --abbrev=8 --date=format:'%Y-%m-%d %H:%M:%S' --all"
+	zip = "!sh -c 'git archive -o head.zip HEAD $(git diff --name-only HEAD~)'"
+[http]
+	sslverify = false
+[pull]
+	rebase = true
+[init]
+	defaultBranch = main
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+[safe]
+	directory = *
+[credential]
+	helper = store
+[credential "https://git.weixin.qq.com"]
+	provider = generic
+[credential "https://gitee.com"]
+	provider = generic
+[color]
+	ui = true
+[color "diff-highlight"]
+	oldNormal = red bold
+	oldHighlight = red bold 52
+	newNormal = green bold
+	newHighlight = green bold 22
+[color "diff"]
+	meta = 227
+	frag = magenta bold
+	commit = 227 bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse

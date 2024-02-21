@@ -1,0 +1,5 @@
+{
+    "name": "doom conf",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "git"
+}

@@ -1,0 +1,16 @@
+version: '2'
+services:
+  git:
+    image: alpine/git
+    container_name: doom-conf-git
+    restart: always
+    volumes:
+      - ..:/git
+      - .ssh/:/root/.ssh/
+      - .gitconfig:/root/.gitconfig
+      - .gitignore:/root/.gitignore
+    working_dir: /git
+    entrypoint:
+      - sh
+      - -c
+      - chmod 600 /root/.ssh/id_rsa && git pull origin develop && git df --name-status HEAD^ && tail -f /dev/null
