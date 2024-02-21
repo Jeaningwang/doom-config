@@ -203,6 +203,7 @@
   (setq org-agenda-files
         (list (expand-file-name "Inbox.org" org-directory)
               (expand-file-name "Private.org" org-directory)
+              (expand-file-name "Todo.org" org-directory)
               (expand-file-name "Work.org" org-directory)
               (expand-file-name "Projects.org" org-directory)
               (expand-file-name "Notes.org" org-directory)
