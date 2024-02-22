@@ -6,8 +6,42 @@
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
-;; (setq user-full-name "John Doe"
-;;       user-mail-address "john@doe.com")
+(setq user-full-name "dong.wang"
+      user-mail-address "moneatts@outlook.com")
+
+;; 常用的 editor 配置
+(setq-default
+      tab-width 4 ;; tab的宽度
+      scroll-margin 2 ;; add a margin when scrolling vertically
+      )
+
+;; whitespace 展示
+(defun jp/more-whitespaces ()
+  (interactive)
+  ;;
+  ;; ·	183	b7	MIDDLE DOT
+  ;; ¶	182	b6	PILCROW SIGN
+  ;; ↵	8629	21b5	DOWNWARDS ARROW WITH CORNER LEFTWARDS
+  ;; ↩	8617	21a9	LEFTWARDS ARROW WITH HOOK
+  ;; ⏎	9166	23ce	RETURN SYMBOL
+  ;; ▷	9655	25b7	WHITE RIGHT POINTING TRIANGLE
+  ;; ▶	9654	25b6	BLACK RIGHT-POINTING TRIANGLE
+  ;; →	8594	2192	RIGHTWARDS ARROW
+  ;; ↦	8614	21a6	RIGHTWARDS ARROW FROM BAR
+  ;; ⇥	8677	21e5	RIGHTWARDS ARROW TO BAR
+  ;; ⇨	8680	21e8	RIGHTWARDS WHITE ARROW
+  (setq whitespace-style '(face spaces tabs newline space-mark tab-mark newline-mark))
+  (setq whitespace-display-mappings
+        '(
+          (space-mark 32 [183] [46])
+          (newline-mark 10 [182 10])
+          (tab-mark 9 [8677 9] [92 9])
+          )
+        )
+  (whitespace-mode 1)
+  )
+
+
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
@@ -72,6 +106,33 @@
 (setq org-directory (getenv "ORG_HOME"))
 
 
+;; 配置 online 搜索链接
+(setq +lookup-provider-url-alist
+  (append '(("Doom issues"       "https://github.com/orgs/doomemacs/projects/2/views/30?filterQuery=%s")
+            ("Doom discourse"    "https://discourse.doomemacs.org/search?q=%s")
+            ("Google"            +lookup--online-backend-google "https://google.com/search?q=%s")
+            ("Google images"     "https://www.google.com/images?q=%s")
+            ("Google maps"       "https://maps.google.com/maps?q=%s")
+            ("Kagi"              "https://kagi.com/search?q=%s")
+            ("Project Gutenberg" "http://www.gutenberg.org/ebooks/search/?query=%s")
+            ("DuckDuckGo"        +lookup--online-backend-duckduckgo "https://duckduckgo.com/?q=%s")
+            ("DevDocs.io"        "https://devdocs.io/#q=%s")
+            ("StackOverflow"     "https://stackoverflow.com/search?q=%s")
+            ("Github"            "https://github.com/search?ref=simplesearch&q=%s")
+            ("Youtube"           "https://youtube.com/results?aq=f&oq=&search_query=%s")
+            ("Wolfram alpha"     "https://wolframalpha.com/input/?i=%s")
+            ("Wikipedia"         "https://wikipedia.org/search-redirect.php?language=en&go=Go&search=%s")
+            ("MDN"               "https://developer.mozilla.org/en-US/search?q=%s")
+            ("Internet archive"  "https://web.archive.org/web/*/%s")
+            ("Sourcegraph"       "https://sourcegraph.com/search?q=context:global+%s&patternType=literal")
+            ("Bing"       "https://cn.bing.com/search?q=%s")
+            ("Yandex"            "https://yandex.com/search/?text=%s")
+            ("Yandex images"     "https://yandex.com/images/search?text=%s")
+            ("Yandex maps"       "https://yandex.com/maps?text=%s"))
+          (when (modulep! :lang rust)
+            '(("Rust Docs" "https://doc.rust-lang.org/std/?search=%s"))))
+  )
+
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
 ;;
@@ -103,3 +164,10 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
+
+;;-------------------------Java---------------------------------------
+;; to continued continued
+
+
+;;-------------------------vim----------------------------------------
+(map!)
