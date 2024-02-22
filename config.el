@@ -11,9 +11,9 @@
 
 ;; 常用的 editor 配置
 (setq-default
-      tab-width 4 ;; tab的宽度
-      scroll-margin 2 ;; add a margin when scrolling vertically
-      )
+ tab-width 4 ;; tab的宽度
+ scroll-margin 2 ;; add a margin when scrolling vertically
+ )
 
 ;; whitespace 展示
 (defun jp/more-whitespaces ()
@@ -43,6 +43,7 @@
 
 
 
+
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
 ;; - `doom-font' -- the primary font to use
@@ -61,20 +62,20 @@
 (cond
  ((featurep :system 'windows)
   (setq doom-font (font-spec :family +main-font :size 18 :weight 'regular)
-      doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
-   )
+        doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
+        )
   (message "window os")
   )
  ((featurep :system 'linux)
   (setq doom-font (font-spec :family +main-font :size 18 :weight 'normal)
-      doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
-   )
+        doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
+        )
   (message "linux os")
   )
  ((featurep :system 'macos)
   (setq doom-font (font-spec :family +main-font :size 18 :weight 'normal)
-      doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
-   )
+        doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
+        )
   (message "mac os")
   )
  (t
@@ -108,30 +109,30 @@
 
 ;; 配置 online 搜索链接
 (setq +lookup-provider-url-alist
-  (append '(("Doom issues"       "https://github.com/orgs/doomemacs/projects/2/views/30?filterQuery=%s")
-            ("Doom discourse"    "https://discourse.doomemacs.org/search?q=%s")
-            ("Google"            +lookup--online-backend-google "https://google.com/search?q=%s")
-            ("Google images"     "https://www.google.com/images?q=%s")
-            ("Google maps"       "https://maps.google.com/maps?q=%s")
-            ("Kagi"              "https://kagi.com/search?q=%s")
-            ("Project Gutenberg" "http://www.gutenberg.org/ebooks/search/?query=%s")
-            ("DuckDuckGo"        +lookup--online-backend-duckduckgo "https://duckduckgo.com/?q=%s")
-            ("DevDocs.io"        "https://devdocs.io/#q=%s")
-            ("StackOverflow"     "https://stackoverflow.com/search?q=%s")
-            ("Github"            "https://github.com/search?ref=simplesearch&q=%s")
-            ("Youtube"           "https://youtube.com/results?aq=f&oq=&search_query=%s")
-            ("Wolfram alpha"     "https://wolframalpha.com/input/?i=%s")
-            ("Wikipedia"         "https://wikipedia.org/search-redirect.php?language=en&go=Go&search=%s")
-            ("MDN"               "https://developer.mozilla.org/en-US/search?q=%s")
-            ("Internet archive"  "https://web.archive.org/web/*/%s")
-            ("Sourcegraph"       "https://sourcegraph.com/search?q=context:global+%s&patternType=literal")
-            ("Bing"       "https://cn.bing.com/search?q=%s")
-            ("Yandex"            "https://yandex.com/search/?text=%s")
-            ("Yandex images"     "https://yandex.com/images/search?text=%s")
-            ("Yandex maps"       "https://yandex.com/maps?text=%s"))
-          (when (modulep! :lang rust)
-            '(("Rust Docs" "https://doc.rust-lang.org/std/?search=%s"))))
-  )
+      (append '(("Doom issues"       "https://github.com/orgs/doomemacs/projects/2/views/30?filterQuery=%s")
+                ("Doom discourse"    "https://discourse.doomemacs.org/search?q=%s")
+                ("Google"            +lookup--online-backend-google "https://google.com/search?q=%s")
+                ("Google images"     "https://www.google.com/images?q=%s")
+                ("Google maps"       "https://maps.google.com/maps?q=%s")
+                ("Kagi"              "https://kagi.com/search?q=%s")
+                ("Project Gutenberg" "http://www.gutenberg.org/ebooks/search/?query=%s")
+                ("DuckDuckGo"        +lookup--online-backend-duckduckgo "https://duckduckgo.com/?q=%s")
+                ("DevDocs.io"        "https://devdocs.io/#q=%s")
+                ("StackOverflow"     "https://stackoverflow.com/search?q=%s")
+                ("Github"            "https://github.com/search?ref=simplesearch&q=%s")
+                ("Youtube"           "https://youtube.com/results?aq=f&oq=&search_query=%s")
+                ("Wolfram alpha"     "https://wolframalpha.com/input/?i=%s")
+                ("Wikipedia"         "https://wikipedia.org/search-redirect.php?language=en&go=Go&search=%s")
+                ("MDN"               "https://developer.mozilla.org/en-US/search?q=%s")
+                ("Internet archive"  "https://web.archive.org/web/*/%s")
+                ("Sourcegraph"       "https://sourcegraph.com/search?q=context:global+%s&patternType=literal")
+                ("Bing"       "https://cn.bing.com/search?q=%s")
+                ("Yandex"            "https://yandex.com/search/?text=%s")
+                ("Yandex images"     "https://yandex.com/images/search?text=%s")
+                ("Yandex maps"       "https://yandex.com/maps?text=%s"))
+              (when (modulep! :lang rust)
+                '(("Rust Docs" "https://doc.rust-lang.org/std/?search=%s"))))
+      )
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
@@ -170,4 +171,9 @@
 
 
 ;;-------------------------vim----------------------------------------
-(map!)
+(map! ;; vim
+ :nv "gh" #'evil-beginning-of-visual-line
+ :nv "gl" #'evil-end-of-visual-line
+ :nv "U" #'evil-redo
+ :v "p" '(#'evil-paste-after #'evil-visual-restore #'evil-yank)
+ )
