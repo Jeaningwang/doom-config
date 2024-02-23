@@ -37,6 +37,8 @@
       )
 (global-whitespace-mode 1)
 
+;; 设置自动换行
+(global-visual-line-mode 1)
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
@@ -191,3 +193,4 @@
 (setq-default display-fill-column-indicator-column 120)
 (global-display-fill-column-indicator-mode)
 (display-fill-column-indicator-mode 1)
+
