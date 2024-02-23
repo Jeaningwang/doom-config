@@ -19,17 +19,17 @@
 (defun jp/more-whitespaces ()
   (interactive)
   ;;
-  ;; ·	183	b7	MIDDLE DOT
-  ;; ¶	182	b6	PILCROW SIGN
-  ;; ↵	8629	21b5	DOWNWARDS ARROW WITH CORNER LEFTWARDS
-  ;; ↩	8617	21a9	LEFTWARDS ARROW WITH HOOK
-  ;; ⏎	9166	23ce	RETURN SYMBOL
-  ;; ▷	9655	25b7	WHITE RIGHT POINTING TRIANGLE
-  ;; ▶	9654	25b6	BLACK RIGHT-POINTING TRIANGLE
-  ;; →	8594	2192	RIGHTWARDS ARROW
-  ;; ↦	8614	21a6	RIGHTWARDS ARROW FROM BAR
-  ;; ⇥	8677	21e5	RIGHTWARDS ARROW TO BAR
-  ;; ⇨	8680	21e8	RIGHTWARDS WHITE ARROW
+  ;; ·    183    b7    MIDDLE DOT
+  ;; ¶    182    b6    PILCROW SIGN
+  ;; ↵    8629    21b5    DOWNWARDS ARROW WITH CORNER LEFTWARDS
+  ;; ↩    8617    21a9    LEFTWARDS ARROW WITH HOOK
+  ;; ⏎    9166    23ce    RETURN SYMBOL
+  ;; ▷    9655    25b7    WHITE RIGHT POINTING TRIANGLE
+  ;; ▶    9654    25b6    BLACK RIGHT-POINTING TRIANGLE
+  ;; →    8594    2192    RIGHTWARDS ARROW
+  ;; ↦    8614    21a6    RIGHTWARDS ARROW FROM BAR
+  ;; ⇥    8677    21e5    RIGHTWARDS ARROW TO BAR
+  ;; ⇨    8680    21e8    RIGHTWARDS WHITE ARROW
   (setq whitespace-style '(face spaces tabs newline space-mark tab-mark newline-mark))
   (setq whitespace-display-mappings
         '(
@@ -41,6 +41,13 @@
   (whitespace-mode 1)
   )
 
+(setq whitespace-style '(face spaces tabs newline space-mark tab-mark newline-mark))
+(setq whitespace-display-mappings
+      '(
+        (space-mark 32 [183] [46])
+        )
+      )
+(whitespace-mode 1)
 
 
 
@@ -172,8 +179,27 @@
 
 ;;-------------------------vim----------------------------------------
 (map! ;; vim
- :nv "gh" #'evil-beginning-of-visual-line
- :nv "gl" #'evil-end-of-visual-line
- :nv "U" #'evil-redo
- :v "p" '(#'evil-paste-after #'evil-visual-restore #'evil-yank)
+ :nv "gh" #'evil-first-non-blank
+ :nv "gl" #'evil-last-non-blank
+ :n "U" #'evil-redo
+ ;; 实现 pgvy 的功能
+ :v "p" (lambda () (interactive)
+          (evil-paste-after evil)
+          (evil-yank-characters evil-visual-beginning evil-visual-end)
+          (goto-char evil-visual-end)
+          )
+ ;; j k 使用时, 使行一直保持在屏幕中央
+ :n "j" (lambda () (interactive)
+          (evil-next-line)
+          (evil-scroll-line-to-center eil)
+          )
+ :n "j" (lambda () (interactive)
+          (evil-next-line)
+          (evil-scroll-line-to-center eil)
+          )
  )
+
+;; 列的指示线
+(setq-default display-fill-column-indicator-character ?\ )
+(setq-default display-fill-column-indicator-column 120)
+(display-fill-column-indicator-mode 1)
