@@ -40,6 +40,9 @@
 ;; 设置自动换行
 (global-visual-line-mode 1)
 
+;; Emacs 启动的时候，使窗口最大化
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
 ;; - `doom-font' -- the primary font to use
@@ -55,40 +58,30 @@
 ;;(setq doom-font (font-spec :family "Fira Code" :size 12 :weight 'semi-light)
 ;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
 (setq +main-font "SauceCodePro NF")
+(let ((monitor-attribs (frame-monitor-attributes)))
+  (setq +display-pixel-width (nth 3 (car monitor-attribs)))
+  (setq +display-pixel-height (car(last (car monitor-attribs))))
+  )
+(setq +main-font-size (cond ((> +display-pixel-width 1920) 24)((>= +display-pixel-width 1680) 18)(t 16)))
+(setq doom-font (font-spec :family +main-font :size +main-font-size :weight 'regular)
+      doom-variable-pitch-font (font-spec :family +main-font :size +main-font-size :weight 'bold)
+      doom-big-font (font-spec :family +main-font :size +main-font-size :weight 'regular)
+      doom-symbol-font (font-spec :family +main-font :size +main-font-size :weight 'regular)
+      doom-serif-font (font-spec :family +main-font :size +main-font-size :weight 'regular)
+      )
 (cond
  ((featurep :system 'windows)
-  (setq doom-font (font-spec :family +main-font :size 18 :weight 'regular)
-        doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
-        doom-big-font (font-spec :family +main-font :size 18 :weight 'regular)
-        doom-symbol-font (font-spec :family +main-font :size 18 :weight 'regular)
-        doom-serif-font (font-spec :family +main-font :size 18 :weight 'regular)
-        )
   (message "window os")
   )
  ((featurep :system 'linux)
-  (setq doom-font (font-spec :family +main-font :size 18 :weight 'regular)
-        doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
-        doom-big-font (font-spec :family +main-font :size 18 :weight 'regular)
-        doom-symbol-font (font-spec :family +main-font :size 18 :weight 'regular)
-        doom-serif-font (font-spec :family +main-font :size 18 :weight 'regular)
-        )
   (message "linux os")
   )
  ((featurep :system 'macos)
-  (setq doom-font (font-spec :family +main-font :size 18 :weight 'regular)
-        doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
-        doom-big-font (font-spec :family +main-font :size 18 :weight 'regular)
-        doom-symbol-font (font-spec :family +main-font :size 18 :weight 'regular)
-        doom-serif-font (font-spec :family +main-font :size 18 :weight 'regular)
-        )
   (message "mac os")
   )
  (t
   (message "未知的操作系统"))
  )
-
-;; Emacs 启动的时候，使窗口最大化
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
 
 ;;
 ;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
@@ -215,7 +208,7 @@
 ;; (setq-default writeroom-width 100)
 (defun set-writeroom-width ()
   "设置 writeroom 的宽度为总宽度的百分比"
-  (setq-default writeroom-width (truncate (* (/ (frame-pixel-width) (frame-char-width)) 0.7)))
+  (setq-default writeroom-width (truncate (* (/ +display-pixel-width (frame-char-width)) 0.7)))
   )
 (after! writeroom-mode
   (add-hook! 'writeroom-mode-hook
