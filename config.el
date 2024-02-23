@@ -59,18 +59,27 @@
  ((featurep :system 'windows)
   (setq doom-font (font-spec :family +main-font :size 18 :weight 'regular)
         doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
+        doom-big-font (font-spec :family +main-font :size 18 :weight 'regular)
+        doom-symbol-font (font-spec :family +main-font :size 18 :weight 'regular)
+        doom-serif-font (font-spec :family +main-font :size 18 :weight 'regular)
         )
   (message "window os")
   )
  ((featurep :system 'linux)
-  (setq doom-font (font-spec :family +main-font :size 18 :weight 'normal)
+  (setq doom-font (font-spec :family +main-font :size 18 :weight 'regular)
         doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
+        doom-big-font (font-spec :family +main-font :size 18 :weight 'regular)
+        doom-symbol-font (font-spec :family +main-font :size 18 :weight 'regular)
+        doom-serif-font (font-spec :family +main-font :size 18 :weight 'regular)
         )
   (message "linux os")
   )
  ((featurep :system 'macos)
-  (setq doom-font (font-spec :family +main-font :size 18 :weight 'normal)
+  (setq doom-font (font-spec :family +main-font :size 18 :weight 'regular)
         doom-variable-pitch-font (font-spec :family +main-font :size 12 :weight 'bold)
+        doom-big-font (font-spec :family +main-font :size 18 :weight 'regular)
+        doom-symbol-font (font-spec :family +main-font :size 18 :weight 'regular)
+        doom-serif-font (font-spec :family +main-font :size 18 :weight 'regular)
         )
   (message "mac os")
   )
@@ -162,11 +171,15 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+;;--------------------------------------------------------------------
 ;;-------------------------Java---------------------------------------
+;;--------------------------------------------------------------------
 ;; to continued continued
 
 
+;;--------------------------------------------------------------------
 ;;-------------------------vim----------------------------------------
+;;--------------------------------------------------------------------
 (map! ;; vim
  :nv "gh" #'evil-first-non-blank
  :nv "gl" #'evil-last-non-blank
@@ -194,3 +207,17 @@
 (global-display-fill-column-indicator-mode)
 (display-fill-column-indicator-mode 1)
 
+
+;;-------------------------------------------------------------------------
+;;-------------------------zen mode----------------------------------------
+;;-------------------------------------------------------------------------
+(setq-default +zen-text-scale 0) ;; 切换到 zen mode 时, 字体变化的大小
+;; (setq-default writeroom-width 100)
+(defun set-writeroom-width ()
+  "设置 writeroom 的宽度为总宽度的百分比"
+  (setq-default writeroom-width (truncate (* (/ (frame-pixel-width) (frame-char-width)) 0.7)))
+  )
+(after! writeroom-mode
+  (add-hook! 'writeroom-mode-hook
+            :append #'set-writeroom-width)
+  )

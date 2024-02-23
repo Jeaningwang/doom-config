@@ -1,3 +1,5 @@
 custom.el
 
 .ssh/
+
+flycheck_config.el
