@@ -182,7 +182,7 @@
  "sw"
  (lambda (str &optional arg)
    (interactive (list (doom-thing-at-point-or-region 'word) current-prefix-arg))
-   (evil-ex (format! "!fy %s" str))
+   (evil-ex (format! "!fy %s" (if str str "")))
    )
  )
 
