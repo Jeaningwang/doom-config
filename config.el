@@ -177,7 +177,13 @@
  :leader
  :desc "Switch to last buffer"
  "bb"
- (lambda! () (interactive) (evil-switch-to-windows-last-buffer))
+ (lambda () (interactive) (evil-switch-to-windows-last-buffer))
+ :desc "Translate word"
+ "sw"
+ (lambda (str &optional arg)
+   (interactive (list (doom-thing-at-point-or-region 'word) current-prefix-arg))
+   (evil-ex (format! "!fy %s" str))
+   )
  )
 
 ;;--------------------------------------------------------------------
