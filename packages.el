@@ -54,3 +54,4 @@
 ;;---------------------------------------------------------------------------
 (package! wordnut)
 (package! define-word)
+(package! osx-dictionary)

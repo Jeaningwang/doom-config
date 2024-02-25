@@ -228,7 +228,7 @@
   )
 (after! writeroom-mode
   (add-hook! 'writeroom-mode-hook
-            :append #'set-writeroom-width)
+             :append #'set-writeroom-width)
   )
 
 
