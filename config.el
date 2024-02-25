@@ -261,3 +261,12 @@
       display-time-default-load-average nil     ;; Do not display my CPU Load
       )
 (display-time-mode 1)
+
+
+;;---------------------------------------------------------------------------
+;;-------------------------Dictionary----------------------------------------
+;;---------------------------------------------------------------------------
+(use-package! wordnut
+  :config
+  (setq +lookup-dictionary-prefer-offline nil)
+  )
