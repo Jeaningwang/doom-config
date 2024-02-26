@@ -62,7 +62,7 @@
   (setq +display-pixel-width (nth 3 (car monitor-attribs)))
   (setq +display-pixel-height (car(last (car monitor-attribs))))
   )
-(setq +main-font-size (cond ((> +display-pixel-width 1920) 24)((>= +display-pixel-width 1680) 18)(t 16)))
+(setq +main-font-size (cond ((> +display-pixel-width 2560) 30)((> +display-pixel-width 1920) 24)((>= +display-pixel-width 1680) 18)(t 16)))
 (setq doom-font (font-spec :family +main-font :size +main-font-size :weight 'regular)
       doom-variable-pitch-font (font-spec :family +main-font :size +main-font-size :weight 'bold)
       doom-big-font (font-spec :family +main-font :size +main-font-size :weight 'regular)
