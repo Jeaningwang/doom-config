@@ -196,10 +196,13 @@
    )
  )
 
+;; (define-key (current-global-map) (kbd "") #'evil-switch-to-windows-last-buffer)
+
 ;;--------------------------------------------------------------------
 ;;-------------------------vim----------------------------------------
 ;;--------------------------------------------------------------------
 (map! ;; vim
+ ;; :g [C-tab] #'evil-switch-to-windows-last-buffer
  :nv "gh" #'evil-first-non-blank
  :nv "gl" #'evil-last-non-blank
  :n "U" #'evil-redo
