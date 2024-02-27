@@ -180,6 +180,9 @@
  :desc "Switch to last buffer"
  "bb"
  (lambda () (interactive) (evil-switch-to-windows-last-buffer))
+ :desc "Save all buffers"
+ "bs"
+ #'evil-write-all
  :desc "Translate word"
  "sw"
  (lambda (str &optional arg)
