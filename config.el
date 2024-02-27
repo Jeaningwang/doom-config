@@ -93,7 +93,12 @@
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
 ;; (setq doom-theme 'doom-one)
-(setq doom-theme 'doom-dracula)
+(let ((custom-theme-list (append '(doom-one doom-henna doom-dracula doom-snazzy) (custom-available-themes)))
+      )
+  (setq custom-theme-list-remove '(doom-bluloco-light))
+  (setq custom-theme-list-final (cl-remove-if (lambda (x) (member x custom-theme-list-remove)) custom-theme-list))
+  (setq doom-theme (nth (random (length custom-theme-list)) custom-theme-list-final))
+  )
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
