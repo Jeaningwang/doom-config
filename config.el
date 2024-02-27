@@ -168,6 +168,8 @@
 ;;-------------------------Java---------------------------------------
 ;;--------------------------------------------------------------------
 ;; to continued continued
+;; (setq lsp-java-java-path (concat (getenv "JAVA_HOME") "\\bin\\java"))
+(setq lsp-java-jdt-download-url  "https://download.eclipse.org/jdtls/milestones/0.57.0/jdt-language-server-0.57.0-202006172108.tar.gz") ;; 使用旧的版本
 
 
 ;;--------------------------------------------------------------------
