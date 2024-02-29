@@ -95,9 +95,9 @@
 ;; (setq doom-theme 'doom-one)
 (let ((custom-theme-list (append '(doom-one doom-henna doom-dracula doom-snazzy) (custom-available-themes)))
       )
-  (setq custom-theme-list-remove '(nil doom-bluloco-light doom-plain-dark doom-gruvbox-light doom-oksolar-light doom-acario-light leuven))
+  (setq custom-theme-list-remove '(doom-bluloco-light doom-plain-dark doom-gruvbox-light doom-oksolar-light doom-acario-light leuven doom-solarized-light doom-homage-white))
   (setq custom-theme-list-final (cl-remove-if (lambda (x) (member x custom-theme-list-remove)) custom-theme-list))
-  (setq doom-theme (nth (random (length custom-theme-list)) custom-theme-list-final))
+  (setq doom-theme (nth (random (length custom-theme-list-final)) custom-theme-list-final))
   )
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
@@ -185,6 +185,7 @@
  :desc "Switch to last buffer"
  "bb"
  (lambda () (interactive) (evil-switch-to-windows-last-buffer))
+ :desc "Switch to last buffer"  "SPC"  #'evil-switch-to-windows-last-buffer
  :desc "Save all buffers"
  "bs"
  #'evil-write-all
@@ -202,7 +203,7 @@
 ;;-------------------------vim----------------------------------------
 ;;--------------------------------------------------------------------
 (map! ;; vim
- ;; :g [C-tab] #'evil-switch-to-windows-last-buffer
+ ;;:g "SPC SPC" #'evil-switch-to-windows-last-buffer
  :nv "gh" #'evil-first-non-blank
  :nv "gl" #'evil-last-non-blank
  :n "U" #'evil-redo
