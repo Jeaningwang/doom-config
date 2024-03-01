@@ -175,6 +175,7 @@
 ;; to continued continued
 ;; (setq lsp-java-java-path (concat (getenv "JAVA_HOME") "\\bin\\java"))
 (setq lsp-java-jdt-download-url  "https://download.eclipse.org/jdtls/milestones/0.57.0/jdt-language-server-0.57.0-202006172108.tar.gz") ;; 使用旧的版本
+(setq org-babel-default-header-args:java `((:imports . "java.lang.reflect.* java.util.stream.* cn.hutool.core.convert.* java.util.* cn.hutool.core.collection.* cn.hutool.core.lang.* cn.hutool.core.util.* cn.hutool.core.io.*") (:cmdline . ,(concat "-cp .:" (expand-file-name "hutool-all-5.4.1.jar" (concat (getenv "HOME") "/.m2/repository/cn/hutool/hutool-all/5.4.1/"))))))
 
 
 ;;--------------------------------------------------------------------
