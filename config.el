@@ -95,7 +95,7 @@
 ;; (setq doom-theme 'doom-one)
 (let ((custom-theme-list (append '(doom-one doom-henna doom-dracula doom-snazzy) (custom-available-themes)))
       )
-  (setq custom-theme-list-remove '(doom-bluloco-light doom-plain-dark doom-gruvbox-light doom-oksolar-light doom-acario-light leuven doom-solarized-light doom-homage-white dichromacy))
+  (setq custom-theme-list-remove '(doom-bluloco-light doom-plain-dark doom-gruvbox-light doom-oksolar-light doom-acario-light leuven doom-solarized-light doom-homage-white dichromacy adwaita modus-operandi))
   (setq custom-theme-list-final (cl-remove-if (lambda (x) (member x custom-theme-list-remove)) custom-theme-list))
   (setq doom-theme (nth (random (length custom-theme-list-final)) custom-theme-list-final))
   )
@@ -290,3 +290,9 @@
 ;;-------------------------Beancount-----------------------------------------
 ;;---------------------------------------------------------------------------
 (add-to-list 'auto-mode-alist '("\\.bean\\'" . beancount-mode))
+
+
+;;--------------------------------------------------------------------------
+;;-------------------------Org Mode-----------------------------------------
+;;--------------------------------------------------------------------------
+;; (add-to-list 'load-path )
