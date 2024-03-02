@@ -69,8 +69,18 @@
       doom-symbol-font (font-spec :family +main-font :size +main-font-size :weight 'regular)
       doom-serif-font (font-spec :family +main-font :size +main-font-size :weight 'regular)
       )
+
+
+;;-------------------------------------------------------------------------------
+;;-------------------------不同系统下做的配置---------------------------------------
+;;-------------------------------------------------------------------------------
 (cond
  ((featurep :system 'windows)
+  ;; 编码
+  ;;(set-terminal-coding-system 'gbk)
+  ;;(modify-coding-system-alist 'process "*" 'gbk)
+  ;;(setq default-terminal-coding-system 'gbk)
+  ;;(setq default-process-coding-system '(gbk . gbk))
   (message "window os")
   )
  ((featurep :system 'linux)
