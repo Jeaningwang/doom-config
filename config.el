@@ -317,3 +317,16 @@
 ;; (add-to-list 'load-path )
 (setq org-log-time "time"
       org-log-done-with-time 't)
+
+
+
+;;---------------------------------------------------------------------------
+;;-------------------------Rime Input Method---------------------------------
+;;---------------------------------------------------------------------------
+(use-package! rime
+  :custom
+  (default-input-method "rime")
+  (if (featurep :system 'macos)
+      (rime-librime-root (expand-file-name "librime/dist" doom-emacs-dir))
+    )
+  )
