@@ -103,9 +103,9 @@
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
 ;; (setq doom-theme 'doom-one)
-(let ((custom-theme-list (append '(doom-one doom-flatwhite dtsdh-light oom-henna doom-dracula doom-snazzy doom-oksolar-dark) (custom-available-themes)))
+(let ((custom-theme-list (append '(doom-tokyo-night doom-material doom-xcode doom-moonlight doom-one doom-flatwhite dtsdh-light oom-henna doom-dracula doom-snazzy doom-oksolar-dark) (custom-available-themes)))
       )
-  (setq custom-theme-list-remove '(doom-bluloco-light doom-plain-dark doom-gruvbox-light doom-oksolar-light doom-acario-light leuven doom-solarized-light doom-homage-white dichromacy adwaita modus-operandi))
+  (setq custom-theme-list-remove '(doom-bluloco-light doom-plain-dark doom-gruvbox-light doom-oksolar-light doom-acario-light leuven doom-solarized-light doom-homage-white dichromacy adwaita modus-operandi doom-ayu-light doom-pine))
   (setq custom-theme-list-final (cl-remove-if (lambda (x) (member x custom-theme-list-remove)) custom-theme-list))
   (setq doom-theme (nth (random (length custom-theme-list-final)) custom-theme-list-final))
   )
@@ -204,7 +204,9 @@
  :desc "Switch to last buffer"
  "bb"
  (lambda () (interactive) (evil-switch-to-windows-last-buffer))
- :desc "Switch to last buffer"  "SPC"  #'evil-switch-to-windows-last-buffer
+ :desc "Switch to last buffer"
+ "SPC"
+ #'evil-switch-to-windows-last-buffer
  :desc "Save all buffers"
  "bs"
  #'evil-write-all
