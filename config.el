@@ -281,6 +281,9 @@
   (doom-modeline-modal-icon t)
   (doom-modeline-minor-modes nil)
   (doom-modeline-major-mode-icon t)
+  (lsp-modeline-code-action-fallback-icon
+   (if doom--system-linux-p "󰌵" lsp-modeline-code-action-fallback-icon)
+   )
 
   (defun doom-modeline-conditional-buffer-encoding ()
     "We expect the encoding to be LF UTF-8, so only show the modeline when this is not the case"
