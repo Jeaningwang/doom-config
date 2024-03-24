@@ -325,13 +325,13 @@
 ;;---------------------------------------------------------------------------
 ;;-------------------------Rime Input Method---------------------------------
 ;;---------------------------------------------------------------------------
-(use-package! rime
-  :custom
-  (default-input-method "rime")
-  (if (featurep :system 'macos)
-      (rime-librime-root (expand-file-name "librime/dist" doom-emacs-dir))
-    )
-  )
+;;(use-package! rime
+;;  :custom
+;;  (default-input-method "rime")
+;;  (if (featurep :system 'macos)
+;;      (rime-librime-root (expand-file-name "librime/dist" doom-emacs-dir))
+;;    )
+;;  )
 
 
 ;;---------------------------------------------------------------------------
