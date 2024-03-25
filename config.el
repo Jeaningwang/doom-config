@@ -281,7 +281,7 @@
   (doom-modeline-modal-icon t)
   (doom-modeline-minor-modes nil)
   (doom-modeline-major-mode-icon t)
-
+  (doom-modeline-buffer-file-name-style 'truncate-with-project)
   (defun doom-modeline-conditional-buffer-encoding ()
     "We expect the encoding to be LF UTF-8, so only show the modeline when this is not the case"
     (setq-local doom-modeline-buffer-encoding
