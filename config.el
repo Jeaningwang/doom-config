@@ -190,6 +190,13 @@
 (setq org-babel-default-header-args:java `((:results . "output")(:dir . ".")(:imports . "java.lang.reflect.* java.util.stream.* cn.hutool.core.convert.* java.util.* cn.hutool.core.collection.* cn.hutool.core.lang.* cn.hutool.core.util.* cn.hutool.core.io.*") ))
 
 
+
+;;--------------------------------------------------------------------
+;;------------------------- C ----------------------------------------
+;;--------------------------------------------------------------------
+(setq org-babel-default-header-args:C '((:results . "output")))
+
+
 ;;--------------------------------------------------------------------
 ;;-------------------------Python-------------------------------------
 ;;--------------------------------------------------------------------
