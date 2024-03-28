@@ -190,6 +190,11 @@
 (setq org-babel-default-header-args:java `((:results . "output")(:dir . ".")(:imports . "java.lang.reflect.* java.util.stream.* cn.hutool.core.convert.* java.util.* cn.hutool.core.collection.* cn.hutool.core.lang.* cn.hutool.core.util.* cn.hutool.core.io.*") ))
 
 
+;;--------------------------------------------------------------------
+;;------------------------- JavaScript -------------------------------
+;;--------------------------------------------------------------------
+(setq org-babel-default-header-args:js '((:results . "output")))
+
 
 ;;--------------------------------------------------------------------
 ;;------------------------- C ----------------------------------------
