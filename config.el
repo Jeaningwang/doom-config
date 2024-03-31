@@ -275,13 +275,11 @@
   )
 (after! writeroom-mode
   (add-hook! 'writeroom-mode-hook
-             :append #'set-writeroom-width)
+             :append #'set-writeroom-width
+             #'writeroom-toggle-mode-line ;显示底部的状态栏
+             )
   )
 
-;; 切换到 zen mode 模式时，底部的状态栏依然显示
-(use-package! writeroom-mode
-  :custom
-  )
 
 ;;--------------------------------------------------------------------------
 ;;-------------------------mode line----------------------------------------
