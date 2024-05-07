@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: sprintf
+# uuid:
+# key: sprintf
+# condition: t
+# --
+fmt.Sprintf("$1\n", $2${0:$$(progn (evil-escape)(evil-escape))})
