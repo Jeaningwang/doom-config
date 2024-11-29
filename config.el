@@ -232,7 +232,7 @@
  "SPC"
  #'evil-switch-to-windows-last-buffer
  :desc "Save all buffers"
- "bs"
+ "fs"
  #'evil-write-all
  :desc "Translate word"
  "sw"
