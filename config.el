@@ -397,3 +397,43 @@
 ;;------------------------- ligatures ---------------------------------------
 ;;---------------------------------------------------------------------------
 (set-ligatures! 't :true "true" :false "false" )
+
+
+;;---------------------------------------------------------------------------
+;;------------------------- AI-LLM ------------------------------------------
+;;---------------------------------------------------------------------------
+;; (use-package! gptel
+;;   :config
+;;   (setq! gptel-api-key "sk-0f839c4be8d4448eb5efd08a815684ba")
+;;   )
+
+;; DeepSeek offers an OpenAI compatible API
+;; (gptel-make-openai "DeepSeek"       ;Any name you want
+;;   :host "api.deepseek.com"
+;;   :endpoint "/chat/completions"
+;;   :stream t
+;;   :key "sk-0f839c4be8d4448eb5efd08a815684ba"               ;can be a function that returns the key
+;;   :models '(deepseek-chat deepseek-coder))
+
+;; OPTIONAL configuration: set as the default gptel backend
+(setq gptel-model   'deepseek-chat
+      gptel-backend
+      (gptel-make-openai "DeepSeek"     ;Any name you want
+        :host "api.deepseek.com"
+        :endpoint "/chat/completions"
+        :stream t
+        :key "sk-0f839c4be8d4448eb5efd08a815684ba"             ;can be a function that returns the key
+        :models '(deepseek-chat deepseek-coder)))
+
+;; Ollama
+;; (gptel-make-ollama "Ollama"             ;Any name of your choosing
+;;   :host "localhost:11434"               ;Where it's running
+;;   :stream t                             ;Stream responses
+;;   :models '(mistral:latest))          ;List of models
+;; ;; OPTIONAL configuration
+;; (setq
+;;  gptel-model 'mistral:latest
+;;  gptel-backend (gptel-make-ollama "Ollama"
+;;                  :host "localhost:11434"
+;;                  :stream t
+;;                  :models '(mistral:latest)))
