@@ -212,6 +212,11 @@
 ;;------------------------- Lua --------------------------------------
 ;;--------------------------------------------------------------------
 (setq org-babel-default-header-args:lua '((:results . "output")))
+(after! lua-mode
+  (setq lua-indent-level 4)
+  (setq tab-width 4)
+  (setq indent-tabs-mode nil)
+  )
 
 
 ;;--------------------------------------------------------------------
@@ -231,9 +236,9 @@
 ;;--------------------------------------------------------------------
 (map!
  :leader
- :desc "Switch to last buffer"
- "bb"
- (lambda () (interactive) (evil-switch-to-windows-last-buffer))
+ ;; :desc "Switch to last buffer"
+ ;; "bb"
+ ;; (lambda () (interactive) (evil-switch-to-windows-last-buffer))
  :desc "Switch to last buffer"
  "SPC"
  #'evil-switch-to-windows-last-buffer
