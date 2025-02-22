@@ -119,6 +119,12 @@
 ;; (setq org-directory "~/org/")
 (setq org-directory (getenv "ORG_HOME"))
 
+;; org roam 配置
+(setq org-roam-capture-templates
+      '(("d" "default" plain "%?" :target
+         (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "${title}\n")
+         :unnarrowed t))
+      )
 
 ;; 配置 online 搜索链接
 (setq +lookup-provider-url-alist
