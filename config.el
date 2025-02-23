@@ -286,6 +286,12 @@
           )
  )
 
+(after! evil-org
+  (map! :map evil-org-mode-map
+        :nv "gh" #'evil-first-non-blank
+        :nv "gl" #'evil-last-non-blank)
+  )
+
 ;; 列的指示线(TODO 暂未生效)
 (setq-default display-fill-column-indicator-character ?\ )
 (setq-default display-fill-column-indicator-column 120)
@@ -451,7 +457,7 @@
 
 
 ;;---------------------------------------------------------------------------
-;;------------------------- org-roam-ui ------------------------------------------
+;;------------------------- org-roam-ui -------------------------------------
 ;;---------------------------------------------------------------------------
 (use-package! websocket
   :after org-roam)
@@ -460,7 +466,7 @@
   :config
   (setq
    org-roam-ui-sync-theme t
-   org-roam-ui-follow t
+   org-roam-ui-follow nil
    org-roam-ui-update-on-save t
    org-roam-ui-open-on-start t
    )
