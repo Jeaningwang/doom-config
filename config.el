@@ -103,7 +103,7 @@
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
 ;; (setq doom-theme 'doom-one)
-(let ((custom-theme-list (append '(doom-monokai-pro doom-badger doom-solarized-dark doom-old-hope doom-tokyo-night doom-material doom-xcode doom-moonlight doom-one doom-flatwhite dtsdh-light oom-henna doom-dracula doom-snazzy doom-oksolar-dark) (custom-available-themes)))
+(let ((custom-theme-list (append '(doom-outrun-electric doom-monokai-pro doom-badger doom-solarized-dark doom-old-hope doom-tokyo-night doom-material doom-xcode doom-moonlight doom-one doom-flatwhite dtsdh-light oom-henna doom-dracula doom-snazzy doom-oksolar-dark) (custom-available-themes)))
       )
   (setq custom-theme-list-remove '(light-blue manoj-dark doom-bluloco-light doom-plain-dark doom-gruvbox-light doom-oksolar-light doom-acario-light leuven doom-solarized-light doom-homage-white dichromacy adwaita modus-operandi doom-ayu-light doom-pine))
   (setq custom-theme-list-final (cl-remove-if (lambda (x) (member x custom-theme-list-remove)) custom-theme-list))
@@ -122,7 +122,7 @@
 ;; org roam 配置
 (setq org-roam-capture-templates
       '(("d" "default" plain "%?" :target
-         (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "${title}\n")
+         (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
          :unnarrowed t))
       )
 
@@ -284,6 +284,9 @@
           (evil-previous-line)
           (evil-scroll-line-to-center nil)
           )
+ :leader :prefix ("e" . "custom") ;; 自定义的快捷键
+ :desc "search node roam" "f" #'org-roam-node-find ;; 搜索 roam-node
+ :desc "insert node roam" "i" #'org-roam-node-insert ;; 插入 roam-node
  )
 
 (after! evil-org
@@ -319,30 +322,34 @@
 ;;--------------------------------------------------------------------------
 ;;-------------------------mode line----------------------------------------
 ;;--------------------------------------------------------------------------
-(use-package! doom-modeline
-  :custom-face
-  (mode-line ((t (:height 1.0))))
-  (mode-line-inactive ((t (:height 0.95))))
-  :custom
-  (doom-modeline-height 16)
-  (doom-modeline-bar-width 4)
-  (doom-modeline-lsp nil)
-  (doom-modeline-modal-icon t)
-  (doom-modeline-minor-modes nil)
-  (doom-modeline-major-mode-icon t)
-  (doom-modeline-buffer-file-name-style 'truncate-with-project)
-  (defun doom-modeline-conditional-buffer-encoding ()
-    "We expect the encoding to be LF UTF-8, so only show the modeline when this is not the case"
-    (setq-local doom-modeline-buffer-encoding
-                (unless (and (memq (plist-get (coding-system-plist buffer-file-coding-system) :category)
-                                   '(coding-category-undecided coding-category-utf-8))
-                             (not (memq (coding-system-eol-type buffer-file-coding-system) '(1 2))))
-                  t)))
+;; (use-package! doom-modeline
+;;   :custom-face
+;;   (mode-line ((t (:height 1.0))))
+;;   (mode-line-inactive ((t (:height 0.95))))
+;;   :custom
+;;   (doom-modeline-height 16)
+;;   (doom-modeline-bar-width 4)
+;;   (doom-modeline-lsp nil)
+;;   (doom-modeline-modal-icon t)
+;;   (doom-modeline-minor-modes nil)
+;;   (doom-modeline-major-mode-icon t)
+;;   (doom-modeline-buffer-file-name-style 'truncate-with-project)
+;;   (defun doom-modeline-conditional-buffer-encoding ()
+;;     "We expect the encoding to be LF UTF-8, so only show the modeline when this is not the case"
+;;     (setq-local doom-modeline-buffer-encoding
+;;                 (unless (and (memq (plist-get (coding-system-plist buffer-file-coding-system) :category)
+;;                                    '(coding-category-undecided coding-category-utf-8))
+;;                              (not (memq (coding-system-eol-type buffer-file-coding-system) '(1 2))))
+;;                   t)))
 
-  (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding) (doom-modeline-buffer-state-icon t))
+;;   (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding) (doom-modeline-buffer-state-icon t))
 
-(setq display-time-24hr-format t                ;; Display 24 Hrs rather than 12
+;; (setq display-time-24hr-format t                ;; Display 24 Hrs rather than 12
+;;       display-time-default-load-average nil     ;; Do not display my CPU Load
+;;       )
+(setq display-time-format "%Y-%m-%d(%V-%u) %H:%M"
       display-time-default-load-average nil     ;; Do not display my CPU Load
+      doom-modeline-buffer-file-name-style 'file-name-with-project
       )
 (display-time-mode 1)
 
@@ -413,7 +420,10 @@
 ;;---------------------------------------------------------------------------
 ;;------------------------- ligatures ---------------------------------------
 ;;---------------------------------------------------------------------------
-(set-ligatures! 't :true "true" :false "false" )
+;; (set-ligatures! 'MAJOR-MODE :true "true" :false "false" )
+(plist-put! +ligatures-extra-symbols
+            :true "T"
+            :false "F")
 
 
 ;;---------------------------------------------------------------------------
