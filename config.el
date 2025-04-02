@@ -355,6 +355,58 @@
 
 
 ;;---------------------------------------------------------------------------
+;;-------------------------Calendar------------------------------------------
+;;---------------------------------------------------------------------------
+(set-face-foreground 'calendar-today "red")
+(set-face-foreground 'diary "navy")
+(setq calendar-week-start-day 1)
+(setq calendar-mark-diary-entries-flag 't)
+
+;; display Chinese date
+(setq org-agenda-format-date 'zeroemacs/org-agenda-format-date-aligned)
+
+(setq cal-china-x-days '["周日" "周一" "周二" "周三" "周四" "周五" "周六"])
+(setq cal-china-english-week '(("周日" . "Sunday") ("周一" . "Monday") ("周二" . "Tuesday") ("周三" . "Wednesday") ("周四" . "Thursday") ("周五" . "Friday") ("周六" . "Saturday")))
+(defun zeroemacs/org-agenda-format-date-aligned (date)
+  "Format a DATE string for display in the daily/weekly agenda, or timeline.
+      This function makes sure that dates are aligned for easy reading."
+  (require 'cal-iso)
+  (let* (
+         (cal-china-x-day-name '["初一" "初二" "初三" "初四" "初五" "初六" "初七" "初八" "初九" "初十"
+                                 "十一" "十二" "十三" "十四" "十五" "十六" "十七" "十八" "十九" "二十"
+                                 "廿一" "廿二" "廿三" "廿四" "廿五" "廿六" "廿七" "廿八" "廿九" "三十"])
+         (dayname (aref cal-china-x-days
+                        (calendar-day-of-week date)))
+         (day (cadr date))
+         (month (car date))
+         (year (nth 2 date))
+         (cn-date (calendar-chinese-from-absolute (calendar-absolute-from-gregorian date))) ;; (78 42 3 5)
+         (cn-month (cl-caddr cn-date))
+         (cn-day (cl-cadddr cn-date))
+         (cn-month-string (concat (aref calendar-chinese-month-name-array
+                                        (1- (floor cn-month)))
+                                  (if (integerp cn-month)
+                                      ""
+                                    "(闰月)")))
+         (cn-day-string (aref cal-china-x-day-name
+                              (1- cn-day))))
+    (format "%04d-%02d-%02d %s %s%s" year month
+            day dayname cn-month-string cn-day-string)))
+
+(defun convert-english-china-week (en-week)
+  "将英文的星期转换成中文的星期.
+   支持任意的大小写
+   "
+  (let ((normalized-en (capitalize (downcase en-week))))
+    (car (rassoc normalized-en cal-china-english-week))
+    )
+  )
+
+;; diary date time format
+(setq calendar-date-display-form '(year "-" (s-pad-left 2 "0" month) "-" (s-pad-left 2 "0" day) (if dayname (concat " " (convert-english-china-week dayname)))))
+
+
+;;---------------------------------------------------------------------------
 ;;-------------------------Dictionary----------------------------------------
 ;;---------------------------------------------------------------------------
 (use-package! wordnut
@@ -423,7 +475,8 @@
 ;; (set-ligatures! 'MAJOR-MODE :true "true" :false "false" )
 (plist-put! +ligatures-extra-symbols
             :true "T"
-            :false "F")
+            :false "F"
+            :str "str")
 
 
 ;;---------------------------------------------------------------------------
