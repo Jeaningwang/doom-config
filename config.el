@@ -121,8 +121,8 @@
 
 ;; org roam 配置
 (setq org-roam-capture-templates
-      '(("d" "default" plain "%?" :target
-         (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+      `(("d" "default" plain "%?"
+         :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
          :unnarrowed t))
       )
 
@@ -152,6 +152,12 @@
               (when (modulep! :lang rust)
                 '(("Rust Docs" "https://doc.rust-lang.org/std/?search=%s"))))
       )
+
+;;--------------------------------------------------------------------------
+;;-------------------------Custom Face--------------------------------------
+;;--------------------------------------------------------------------------
+(set-face-foreground 'bold "red")
+
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
@@ -257,6 +263,8 @@
    (interactive (list (doom-thing-at-point-or-region 'word) current-prefix-arg))
    (evil-ex (format! "!fy %s" (if str str "")))
    )
+ :desc "open quick calc" "oc" #'quick-calc
+ :desc "open calendar" "oC" #'calendar
  )
 
 ;; (global-set-key (kbd "<C-tab>") #'evil-switch-to-windows-last-buffer)
@@ -347,18 +355,16 @@
 ;; (setq display-time-24hr-format t                ;; Display 24 Hrs rather than 12
 ;;       display-time-default-load-average nil     ;; Do not display my CPU Load
 ;;       )
-(setq display-time-format "%Y-%m-%d(%V-%u) %H:%M"
+(setq display-time-format "%Y-%m-%d(%V-%u) %H:%M:%S"
+      display-time-interval 1
       display-time-default-load-average nil     ;; Do not display my CPU Load
       doom-modeline-buffer-file-name-style 'file-name-with-project
       )
 (display-time-mode 1)
 
-
 ;;---------------------------------------------------------------------------
 ;;-------------------------Calendar------------------------------------------
 ;;---------------------------------------------------------------------------
-(set-face-foreground 'calendar-today "red")
-(set-face-foreground 'diary "navy")
 (setq calendar-week-start-day 1)
 (setq calendar-mark-diary-entries-flag 't)
 
@@ -403,7 +409,19 @@
   )
 
 ;; diary date time format
-(setq calendar-date-display-form '(year "-" (s-pad-left 2 "0" month) "-" (s-pad-left 2 "0" day) (if dayname (concat " " (convert-english-china-week dayname)))))
+;; (setq calendar-date-display-form '(year "-" (s-pad-left 2 "0" month) "-" (s-pad-left 2 "0" day) (if dayname (concat " " (convert-english-china-week dayname)))))
+;; agenda display diary(在 agenda 中显示 diary)
+(setq org-agenda-include-diary 't)
+
+
+;;---------------------------------------------------------------------------
+;;-------------------------Clock---------------------------------------------
+;;---------------------------------------------------------------------------
+
+
+;;---------------------------------------------------------------------------
+;;-------------------------Calculator----------------------------------------
+;;---------------------------------------------------------------------------
 
 
 ;;---------------------------------------------------------------------------
