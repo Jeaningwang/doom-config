@@ -122,7 +122,13 @@
 ;; org roam 配置
 (setq org-roam-capture-templates
       `(("d" "default" plain "%?"
-         :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+         ;; :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+         :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                            ;; 使用 %(...) 来执行一段 Elisp 代码
+                            ;; 判断 ${title} 是否包含中文
+                            "%(if (string-match-p \"[[:multibyte:]]\" \"${title}\")
+                                  \"${title}\\n\"
+                                  \"#+title: ${title}\\n\")")
          :unnarrowed t))
       )
 
