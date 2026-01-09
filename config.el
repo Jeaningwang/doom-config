@@ -278,7 +278,8 @@
    (evil-ex (format! "!fy %s" (if str str "")))
    )
  :desc "open quick calc" "oc" #'quick-calc
- :desc "open calendar" "oC" #'calendar
+ ;; :desc "open calendar" "oC" #'calendar
+ :desc "open calc" "oC" #'calc
  )
 
 ;; (global-set-key (kbd "<C-tab>") #'evil-switch-to-windows-last-buffer)
@@ -479,7 +480,7 @@
 ;;---------------------------------------------------------------------------
 ;; 将 plantuml.jar 包放置到 doom-data-dir 下面
 ;; 系统中安装命令，如 sudo apt-get install graphviz
-
+(setq org-babel-default-header-args:plantuml '((:results . "file") (:exports . "code")))
 
 ;;---------------------------------------------------------------------------
 ;;-------------------------Exec Path-----------------------------------------
