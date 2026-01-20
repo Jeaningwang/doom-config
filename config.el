@@ -40,9 +40,6 @@
 ;; 设置自动换行
 (global-visual-line-mode 1)
 
-;; 全局配置 flycheck
-(global-flycheck-mode -1)
-
 ;; Emacs 启动的时候，使窗口最大化
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 
@@ -331,6 +328,9 @@
 (global-display-fill-column-indicator-mode)
 (display-fill-column-indicator-mode 1)
 
+;; 全局配置 flycheck
+(global-flycheck-mode -1)
+
 
 ;;-------------------------------------------------------------------------
 ;;-------------------------zen mode----------------------------------------
@@ -573,4 +573,14 @@
    org-roam-ui-update-on-save t
    org-roam-ui-open-on-start t
    )
+  )
+
+
+;;---------------------------------------------------------------------------
+;;------------------------- org-align ---------------------------------------
+;;---------------------------------------------------------------------------
+(use-package! valign
+  :hook (org-mode . valign-mode) ; 在 org-mode 中自动开启
+  :config
+  (setq valign-format-separator-row t) ; 可选，让分隔线看起来更平滑
   )
