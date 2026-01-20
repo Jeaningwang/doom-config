@@ -40,6 +40,9 @@
 ;; 设置自动换行
 (global-visual-line-mode 1)
 
+;; 全局配置 flycheck
+(global-flycheck-mode -1)
+
 ;; Emacs 启动的时候，使窗口最大化
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 
