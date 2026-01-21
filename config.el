@@ -120,17 +120,32 @@
 (setq org-directory (getenv "ORG_HOME"))
 
 ;; org roam 配置
-(setq org-roam-capture-templates
-      `(("d" "default" plain "%?"
-         ;; :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-         :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                            ;; 使用 %(...) 来执行一段 Elisp 代码
-                            ;; 判断 ${title} 是否包含中文
-                            "%(if (string-match-p \"[[:multibyte:]]\" \"${title}\")
-                                  \"${title}\\n\"
-                                  \"#+title: ${title}\\n\")")
-         :unnarrowed t))
-      )
+(after! org-roam
+  (if (version<= "30.2" emacs-version)
+      ;; ----------------------------------------------------------------
+      ;; 情况 1: Emacs 版本 >= 30.2
+      ;; 直接使用标准写法 (自动加上 #+title:)
+      ;; ----------------------------------------------------------------
+      (setq org-roam-capture-templates
+            `(("d" "default" plain "%?"
+               :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                  "#+title: ${title}\n")
+               :unnarrowed t)))
+
+    ;; ----------------------------------------------------------------
+    ;; 情况 2: Emacs 版本 < 30.2
+    ;; 使用你之前的写法 (中文不加 #+title:，英文加)
+    ;; ----------------------------------------------------------------
+    (setq org-roam-capture-templates
+          `(("d" "default" plain "%?"
+             :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                ;; 注意：这里的逻辑是你原始代码的逻辑
+                                ;; 即：如果是中文，只输出 title (无前缀)
+                                ;;     如果是英文，输出 #+title: + title
+                                "%(if (string-match-p \"[[:multibyte:]]\" \"${title}\")
+                                      \"${title}\\n\"
+                                      \"#+title: ${title}\\n\")")
+             :unnarrowed t)))))
 
 ;; 配置 online 搜索链接
 (setq +lookup-provider-url-alist
