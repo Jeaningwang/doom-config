@@ -459,7 +459,48 @@
 ;;---------------------------------------------------------------------------
 ;;-------------------------Calculator----------------------------------------
 ;;---------------------------------------------------------------------------
+(after! calc
+  ;; 1. 定义一个开关变量，防止你不需要的时候看着眼花
+  (defvar my/calc-show-multi-radix nil
+    "If non-nil, show Hex and Bin alongside Decimal in Calc.")
 
+  ;; 2. 核心逻辑：拦截 Calc 的显示函数
+  (defun my/calc-add-radix-annotation (orig-fun entry)
+    "Advice to append Hex/Bin annotations to Calc stack entries."
+    ;; 先获取原始的显示结果 (通常是十进制)
+    (let ((result (funcall orig-fun entry))
+          (val (car entry))) ;; 获取内部数值对象
+      ;; 只有当: 开关打开 且 数值是整数 时才处理
+      (if (and my/calc-show-multi-radix
+               (Math-integerp val))
+          (let* (;; 临时切换到 16 进制计算 Hex 字符串
+                 (hex (let ((calc-number-radix 16))
+                        (math-format-value val)))
+                 ;; 临时切换到 2 进制计算 Bin 字符串
+                 (bin (let ((calc-number-radix 2))
+                        (math-format-value val)))
+                 ;; 简单的正则处理，把 "16#" 和 "2#" 前缀去掉，更美观
+                 (hex-clean (replace-regexp-in-string "^16#" "" hex))
+                 (bin-clean (replace-regexp-in-string "^2#" "" bin)))
+            ;; 格式化输出：%-12s 表示左对齐占12格，后面跟注释
+            (format "%-12s ;; Hex: %s | Bin: %s" result hex-clean bin-clean))
+        ;; 如果不满足条件，就原样返回
+        result)))
+
+  ;; 3. 把上面的逻辑“挂”到 Calc 的渲染环节上
+  (advice-add 'math-format-stack-value :around #'my/calc-add-radix-annotation)
+
+  ;; 4. 定义一个命令来快速开关这个功能
+  (defun toggle-calc-radix-display ()
+    "Toggle multi-radix display in Calc."
+    (interactive)
+    (setq my/calc-show-multi-radix (not my/calc-show-multi-radix))
+    (calc-refresh) ;; 强制刷新界面
+    (message "Multi-radix display: %s" (if my/calc-show-multi-radix "ON" "OFF")))
+
+  ;; 5. 绑定快捷键 (可选，比如绑定到 'gm')
+  (map! :map calc-mode-map
+        "g m" #'toggle-calc-radix-display))
 
 ;;---------------------------------------------------------------------------
 ;;-------------------------Dictionary----------------------------------------
