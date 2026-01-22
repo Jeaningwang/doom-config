@@ -424,10 +424,12 @@
 ;; display Chinese date
 (setq org-agenda-format-date 'zeroemacs/org-agenda-format-date-aligned)
 (after! org
-  ;; 显示从今天起往后的31天
-  ;; (setq org-agenda-span 31)
-  ;; 显示当月的时间
-  (setq org-agenda-span 'month)
+  (setq org-agenda-span 'month ;; 显示当月的时间
+        ;; org-agenda-span 31 ;; 显示从今天起往后的31天
+        ;; org-log-done 'time ;; 当任务状态切换成 done 时，添加一个日期
+        org-log-done 'note ;; 记录时间并提示输入备注
+        org-log-into-drawer t ;; 将状态变更记录放入 :LOGBOOK: 抽屉
+        )
   )
 
 (setq cal-china-x-days '["周日" "周一" "周二" "周三" "周四" "周五" "周六"])
