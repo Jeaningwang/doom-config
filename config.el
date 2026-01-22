@@ -343,8 +343,20 @@
 (global-display-fill-column-indicator-mode)
 (display-fill-column-indicator-mode 1)
 
-;; 全局配置 flycheck
-(global-flycheck-mode -1)
+
+;;-------------------------------------------------------------------------
+;;------------------------- fly check -------------------------------------
+;;-------------------------------------------------------------------------
+(after! flycheck
+  ;; 1. 关闭全局模式（双重保险）
+  (global-flycheck-mode -1)
+  (setq flycheck-global-modes nil)
+  
+  ;; 2. 移除 Doom 添加的自动开启钩子
+  ;; Doom 默认会在 prog-mode, text-mode 等模式下自动开启 flycheck
+  (remove-hook 'prog-mode-hook #'flycheck-mode)
+  (remove-hook 'text-mode-hook #'flycheck-mode)
+  (remove-hook 'conf-mode-hook #'flycheck-mode))
 
 
 ;;-------------------------------------------------------------------------
