@@ -456,6 +456,23 @@
       calendar-holidays cal-china-x-chinese-holidays ;; 使用中国的节日来代替原来的默认节日
       )
 
+(defun my/filter-chinese-date-str (str)
+  "过滤掉字符串中的节气和带括号的星座。"
+  (let* (;; 1. 定义要过滤的节气（这里可以根据需要补充）
+         (solar-terms-regexp (regexp-opt (append cal-china-x-solar-term-name nil)))
+         ;; 2. 定义星座的正则模式：匹配括号及其内部内容
+         (horoscope-regexp (regexp-opt (mapcar (lambda (x) (nth 2 x)) cal-china-x-horoscope-name)))
+         ;; 执行替换
+         (step1 (replace-regexp-in-string solar-terms-regexp "" str))
+         (step2 (replace-regexp-in-string "(.*?)" "" step1)))
+    ;; trim 掉可能残余的空格
+    (string-trim step2)))
+
+(defun my/align-str (str width)
+  "将字符串 STR 填充到指定 WIDTH（考虑中文宽度）。"
+  (let ((current-width (string-width str)))
+    (concat str (make-string (max 0 (- width current-width)) ?\s))))
+
 ;; display Chinese date
 (after! org
   (setq org-agenda-format-date #'zeroemacs/org-agenda-format-date-aligned)
@@ -468,14 +485,22 @@
            (day (cadr date))
            ;; 1. 获取星期名
            (dayname (aref cal-china-x-days (calendar-day-of-week date)))
-           ;; 2. 获取农历月日字符串 (例如 "腊月初九")
-           ;; substring 3 是为了去掉干支年(如 "乙巳年")
-           (cn-date-str (substring (cal-china-x-chinese-date-string date) 0))
+           ;; 2. 获取农历月日字符串
+           (cn-date-str (my/filter-chinese-date-str (cal-china-x-chinese-date-string date)))
+           ;; 3. 获取节气
+           (cn-solar-term (cal-china-x-get-solar-term date))
+           ;; 4. 获取星座
+           (cn-horoscope (cal-china-x-get-horoscope month day))
            )
       
       ;; 格式化输出
-      (format "%04d-%02d-%02d %s %s"
-              year month day dayname cn-date-str))))
+      (format "%04d-%02d-%02d %s %s %s %s"
+              year month day
+              (my/align-str dayname 4)
+              (my/align-str cn-horoscope 6)
+              (my/align-str cn-solar-term 6)
+              cn-date-str
+              ))))
 
 
 ;;---------------------------------------------------------------------------
