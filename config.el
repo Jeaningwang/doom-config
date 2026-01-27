@@ -414,7 +414,7 @@
 ;;---------------------------------------------------------------------------
 ;;-------------------------  Calendar ---------------------------------------
 ;;---------------------------------------------------------------------------
-(setq calendar-week-start-day 1)
+(setq calendar-week-start-day 1) ;; 从周一开始
 (setq calendar-mark-diary-entries-flag 't)
 
 
@@ -423,14 +423,32 @@
 ;;---------------------------------------------------------------------------
 ;; display Chinese date
 (setq org-agenda-format-date 'zeroemacs/org-agenda-format-date-aligned)
+
 (after! org
-  (setq org-agenda-span 'month ;; 显示当月的时间
-        ;; org-agenda-span 31 ;; 显示从今天起往后的31天
-        ;; org-log-done 'time ;; 当任务状态切换成 done 时，添加一个日期
-        org-log-done 'note ;; 记录时间并提示输入备注
-        org-log-into-drawer t ;; 将状态变更记录放入 :LOGBOOK: 抽屉
-        )
+  ;; 禁用 evil-vim 模式
+  (evil-set-initial-state 'org-agenda-mode 'emacs)
+
+  ;; 默认显示周视图
+  org-agenda-start-on-weekday 1 ;; 从周一开始
+  org-agenda-span 'week
+  org-agenda-start-day nil
+
+  ;; org-log-done 'time ;; 当任务状态切换成 done 时，添加一个日期
+  org-log-done 'note ;; 记录时间并提示输入备注
+  org-log-into-drawer t ;; 将状态变更记录放入 :LOGBOOK: 抽屉
   )
+(setq org-agenda-custom-commands
+      '(("w" "周计划 (周一开启)"
+         agenda ""
+         ((org-agenda-span 'week)
+          (org-agenda-start-on-weekday 1)
+          (org-agenda-start-day nil))) ;; nil 会自动寻找当前周的周一
+
+        ("m" "月看板 (1号开启)"
+         agenda ""
+         ((org-agenda-span 'month)
+          (org-agenda-start-day (format-time-string "%Y-%m-01"))))))
+)
 
 (setq cal-china-x-days '["周日" "周一" "周二" "周三" "周四" "周五" "周六"])
 (setq cal-china-english-week '(("周日" . "Sunday") ("周一" . "Monday") ("周二" . "Tuesday") ("周三" . "Wednesday") ("周四" . "Thursday") ("周五" . "Friday") ("周六" . "Saturday")))
