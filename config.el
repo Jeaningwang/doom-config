@@ -471,16 +471,11 @@
            ;; 2. 获取农历月日字符串 (例如 "腊月初九")
            ;; substring 3 是为了去掉干支年(如 "乙巳年")
            (cn-date-str (substring (cal-china-x-chinese-date-string date) 0))
-           ;; 3. 获取该日期的节日列表
-           (holidays (cal-china-x-get-holiday date))
-           ;; 将节日列表合并为字符串，如果没有节日则为空
-           (holiday-str (if holidays 
-                            (concat " [" (mapconcat #'identity holidays " ") "]")
-                          "")))
+           )
       
       ;; 格式化输出
-      (format "%04d-%02d-%02d %s %s%s"
-              year month day dayname cn-date-str holiday-str))))
+      (format "%04d-%02d-%02d %s %s"
+              year month day dayname cn-date-str))))
 
 
 ;;---------------------------------------------------------------------------
