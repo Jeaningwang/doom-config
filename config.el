@@ -417,26 +417,29 @@
 (setq calendar-week-start-day 1) ;; 从周一开始
 (setq calendar-mark-diary-entries-flag 't)
 
+;; 农历
+(use-package! cal-china-x
+  :after calendar
+  :config
+  (setq calendar-chinese-all-holidays-flag t)
+  )
+
 
 ;;---------------------------------------------------------------------------
 ;;--------------------------- Agenda ----------------------------------------
 ;;---------------------------------------------------------------------------
-;; display Chinese date
-(setq org-agenda-format-date 'zeroemacs/org-agenda-format-date-aligned)
-
 (after! org
-  ;; 禁用 evil-vim 模式
-  (evil-set-initial-state 'org-agenda-mode 'emacs)
+  (setq
+   ;; 默认显示周视图
+   org-agenda-start-on-weekday 1 ;; 从周一开始
+   org-agenda-span 'week
+   org-agenda-start-day nil
 
-  ;; 默认显示周视图
-  org-agenda-start-on-weekday 1 ;; 从周一开始
-  org-agenda-span 'week
-  org-agenda-start-day nil
+   ;; org-log-done 'time ;; 当任务状态切换成 done 时，添加一个日期
+   org-log-done 'note ;; 记录时间并提示输入备注
+   org-log-into-drawer t ;; 将状态变更记录放入 :LOGBOOK: 抽屉
+   ))
 
-  ;; org-log-done 'time ;; 当任务状态切换成 done 时，添加一个日期
-  org-log-done 'note ;; 记录时间并提示输入备注
-  org-log-into-drawer t ;; 将状态变更记录放入 :LOGBOOK: 抽屉
-  )
 (setq org-agenda-custom-commands
       '(("w" "周计划 (周一开启)"
          agenda ""
@@ -448,49 +451,36 @@
          agenda ""
          ((org-agenda-span 'month)
           (org-agenda-start-day (format-time-string "%Y-%m-01"))))))
-)
 
-(setq cal-china-x-days '["周日" "周一" "周二" "周三" "周四" "周五" "周六"])
-(setq cal-china-english-week '(("周日" . "Sunday") ("周一" . "Monday") ("周二" . "Tuesday") ("周三" . "Wednesday") ("周四" . "Thursday") ("周五" . "Friday") ("周六" . "Saturday")))
-(defun zeroemacs/org-agenda-format-date-aligned (date)
-  "Format a DATE string for display in the daily/weekly agenda, or timeline.
-      This function makes sure that dates are aligned for easy reading."
-  (require 'cal-iso)
-  (let* (
-         (cal-china-x-day-name '["初一" "初二" "初三" "初四" "初五" "初六" "初七" "初八" "初九" "初十"
-                                 "十一" "十二" "十三" "十四" "十五" "十六" "十七" "十八" "十九" "二十"
-                                 "廿一" "廿二" "廿三" "廿四" "廿五" "廿六" "廿七" "廿八" "廿九" "三十"])
-         (dayname (aref cal-china-x-days
-                        (calendar-day-of-week date)))
-         (day (cadr date))
-         (month (car date))
-         (year (nth 2 date))
-         (cn-date (calendar-chinese-from-absolute (calendar-absolute-from-gregorian date))) ;; (78 42 3 5)
-         (cn-month (cl-caddr cn-date))
-         (cn-day (cl-cadddr cn-date))
-         (cn-month-string (concat (aref calendar-chinese-month-name-array
-                                        (1- (floor cn-month)))
-                                  (if (integerp cn-month)
-                                      ""
-                                    "(闰月)")))
-         (cn-day-string (aref cal-china-x-day-name
-                              (1- cn-day))))
-    (format "%04d-%02d-%02d %s %s%s" year month
-            day dayname cn-month-string cn-day-string)))
+(setq org-agenda-include-diary t ;; agenda display diary(在 agenda 中显示 diary)
+      calendar-holidays cal-china-x-chinese-holidays ;; 使用中国的节日来代替原来的默认节日
+      )
 
-(defun convert-english-china-week (en-week)
-  "将英文的星期转换成中文的星期.
-   支持任意的大小写
-   "
-  (let ((normalized-en (capitalize (downcase en-week))))
-    (car (rassoc normalized-en cal-china-english-week))
-    )
-  )
+;; display Chinese date
+(after! org
+  (setq org-agenda-format-date #'zeroemacs/org-agenda-format-date-aligned)
 
-;; diary date time format
-;; (setq calendar-date-display-form '(year "-" (s-pad-left 2 "0" month) "-" (s-pad-left 2 "0" day) (if dayname (concat " " (convert-english-china-week dayname)))))
-;; agenda display diary(在 agenda 中显示 diary)
-(setq org-agenda-include-diary 't)
+  (defun zeroemacs/org-agenda-format-date-aligned (date)
+    "显示 YYYY-MM-DD 星期 农历月日 以及农历节日。"
+    (require 'cal-china-x)
+    (let* ((year (nth 2 date))
+           (month (car date))
+           (day (cadr date))
+           ;; 1. 获取星期名
+           (dayname (aref cal-china-x-days (calendar-day-of-week date)))
+           ;; 2. 获取农历月日字符串 (例如 "腊月初九")
+           ;; substring 3 是为了去掉干支年(如 "乙巳年")
+           (cn-date-str (substring (cal-china-x-chinese-date-string date) 0))
+           ;; 3. 获取该日期的节日列表
+           (holidays (cal-china-x-get-holiday date))
+           ;; 将节日列表合并为字符串，如果没有节日则为空
+           (holiday-str (if holidays 
+                            (concat " [" (mapconcat #'identity holidays " ") "]")
+                          "")))
+      
+      ;; 格式化输出
+      (format "%04d-%02d-%02d %s %s%s"
+              year month day dayname cn-date-str holiday-str))))
 
 
 ;;---------------------------------------------------------------------------
