@@ -611,6 +611,66 @@
               cn-date-str
               ))))
 
+(defun my/org-to-taskwarrior-script ()
+  "将 Org-agenda 中【既是 TODO 又有 SCHEDULED】的任务导出为 Taskwarrior 脚本。"
+  (interactive)
+  (let* ((output-file (expand-file-name "~/Downloads/sync_tasks.sh"))
+         (tasks '()))
+    (dolist (file (org-agenda-files))
+      (when (file-exists-p file)
+        (with-current-buffer (find-file-noselect file)
+          (org-with-wide-buffer
+           (goto-char (point-min))
+           (while (re-search-forward org-complex-heading-regexp nil t)
+             (let* ((element (org-element-at-point))
+                    (todo-state (org-element-property :todo-keyword element))
+                    (heading (org-element-property :title element))
+                    (priority (org-element-property :priority element))
+                    (tags (org-element-property :tags element))
+                    (sched-prop (org-element-property :scheduled element)))
+               
+               ;; 核心筛选逻辑：必须是 TODO 状态 且 必须有计划时间
+               (when (and (string-equal todo-state "TODO") 
+                          sched-prop)
+                 (let* ((task-cmd (format "task add %s" (shell-quote-argument heading)))
+                        ;; 安全转换时间格式
+                        (time-obj (org-timestamp-to-time sched-prop))
+                        (date-str (format-time-string "%Y-%m-%d" time-obj)))
+                   
+                   ;; 1. 添加等待日期 (Taskwarrior 的 wait 属性)
+                   (setq task-cmd (concat task-cmd " wait:" date-str))
+                   
+                   ;; 2. 处理优先级 (Org 65=A, 66=B, 67=C)
+                   (when priority
+                     (setq task-cmd (concat task-cmd 
+                                            (cond ((eq priority 65) " priority:H")
+                                                  ((eq priority 66) " priority:M")
+                                                  ((eq priority 67) " priority:L")
+                                                  (t "")))))
+                   
+                   ;; 3. 处理标签
+                   (when tags
+                     (dolist (tag tags)
+                       (setq task-cmd (concat task-cmd " +" (shell-quote-argument tag)))))
+                   
+                   (push task-cmd tasks)))))))))
+    
+    ;; 写入文件
+    (if tasks
+        (with-temp-file output-file
+          (insert "#!/bin/bash\n")
+          (insert "# 自动生成的 Taskwarrior 同步脚本 (仅限有计划的任务)\n\n")
+          (insert (mapconcat #'identity (reverse tasks) "\n"))
+          (insert "\n\necho '同步完成！'\n"))
+      (message "未发现同时符合 TODO 且有 SCHEDULED 的任务。"))
+    
+    (when tasks
+      (chmod output-file #o755)
+      (message "已导出 %d 个任务至: %s" (length tasks) output-file))))
+
+(map! :leader
+      (:prefix ("n" . "notes")
+       :desc "agenda to Taskwarrior" "t" #'my/org-to-taskwarrior-script))
 
 ;;---------------------------------------------------------------------------
 ;;--------------------------- Clock -----------------------------------------
