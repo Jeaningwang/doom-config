@@ -479,6 +479,55 @@
       (when tasks
         (message "导出完成！共 %d 项，文件: %s" (length tasks) output-file)))))
 
+(defun my/ai-gemini-monthly-report ()
+  "导出过去 30 天已完成任务并请求 Gemini 进行总结分析，结果显示在独立 Buffer 中。"
+  (interactive)
+  ;; 1. 执行导出函数 (确保此函数已定义)
+  (my/export-done-tasks-with-duration)
+  
+  (let* ((file-path (expand-file-name "~/Downloads/monthly_done_detailed.txt"))
+         (data-content (if (file-exists-p file-path)
+                           (with-temp-buffer
+                             (insert-file-contents file-path)
+                             (buffer-string))
+                         nil))
+         ;; 准备输出 Buffer
+         (out-buf-name "*Gemini Monthly Review*")
+         (output-buffer (get-buffer-create out-buf-name)))
+    
+    (if data-content
+        (progn
+          ;; 自动开启代理
+          (unless (bound-and-true-p url-proxy-services)
+            (my/toggle-proxy))
+          
+          ;; 准备输出 Buffer 的状态
+          (with-current-buffer output-buffer
+            (let ((inhibit-read-only t))
+              (erase-buffer)
+              (org-mode)
+              (insert "#+TITLE: Gemini 月度复盘报告\n")
+              (insert "#+SUBTITLE: 生成时间: " (format-time-string "%Y-%m-%d %H:%M") "\n\n")
+              (insert "正在等待 Gemini 教练的复盘结果...\n\n")))
+          
+          ;; 弹出窗口显示 Buffer
+          (display-buffer output-buffer)
+
+          ;; 发起请求
+          (gptel-request
+              (format "你是一个专业的生产力专家。请分析以下这份任务执行报告：\n\n%s\n\n请从『时间利用率』、『计划达成度』和『下月改进建议』三个维度给我一个毒舌但有用的复盘。" 
+                      data-content)
+            :buffer output-buffer
+            :position (with-current-buffer output-buffer (point-max)) ;; 强制指定插入到目标 Buffer 的末尾
+            :system "你是一个严格的生产力导师，擅长从数据中发现用户拖延的借口。")
+          
+          (message "已成功发起请求，请查看 %s" out-buf-name))
+      (message "错误：找不到导出文件，请检查路径。"))))
+
+(map! :leader
+      (:prefix ("n" . "notes")
+       :desc "Gemini 月末总结" "z" #'my/ai-gemini-monthly-report))
+
 (after! cal-china-x
   (setq calendar-holidays cal-china-x-chinese-holidays ;; 使用中国的节日来代替原来的默认节日
         )
