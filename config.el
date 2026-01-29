@@ -754,3 +754,40 @@
   :config
   (setq valign-format-separator-row t) ; 可选，让分隔线看起来更平滑
   )
+
+
+;;---------------------------------------------------------------------------
+;;------------------------- url-proxy ---------------------------------------
+;;---------------------------------------------------------------------------
+;; 1. 定义代理变量 (提取 IP 与 端口)
+(defvar my-proxy-host "192.168.3.2" "代理服务器地址")
+(defvar my-proxy-port "22307"      "代理服务器端口")
+
+;; 2. 定义切换函数
+(defun my/toggle-proxy ()
+  "一键开关 Emacs 代理，使用 my-proxy-host 和 my-proxy-port。"
+  (interactive)
+  (let ((proxy-addr (format "%s:%s" my-proxy-host my-proxy-port)))
+    (if (bound-and-true-p url-proxy-services)
+        ;; 关闭代理
+        (progn
+          (setq url-proxy-services nil
+                gptel-backend-proxy nil)
+          ;; 同时清理环境变量，确保外部 curl 也能感知
+          (setenv "http_proxy"  nil)
+          (setenv "https_proxy" nil)
+          (message "Proxy is OFF"))
+      ;; 开启代理
+      (progn
+        (setq url-proxy-services `(("http"  . ,proxy-addr)
+                                   ("https" . ,proxy-addr)))
+        (setq gptel-backend-proxy proxy-addr)
+        ;; 设置环境变量，帮助一些外部进程（如 gptel 的 curl 后端）
+        (setenv "http_proxy"  (format "http://%s" proxy-addr))
+        (setenv "https_proxy" (format "http://%s" proxy-addr))
+        (message "Proxy is ON (%s)" proxy-addr)))))
+
+;; 3. 绑定快捷键
+(map! :leader
+      (:prefix ("t" . "toggle")
+       :desc "Proxy" "p" #'my/toggle-proxy))
