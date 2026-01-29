@@ -428,6 +428,62 @@
 ;;---------------------------------------------------------------------------
 ;;--------------------------- Agenda ----------------------------------------
 ;;---------------------------------------------------------------------------
+;; agenda 每月任务导出
+(defun my/export-done-tasks-with-duration ()
+  "遍历所有 Agenda 文件，提取过去 30 天内完成的任务，计算执行跨度并保存。"
+  (interactive)
+  (let* ((days-back 30)
+         (output-file (expand-file-name "~/Downloads/monthly_done_detailed.txt"))
+         ;; 计算 30 天前的秒数
+         (since-seconds (float-time (time-subtract (current-time) (days-to-time days-back))))
+         (tasks '()))
+    (dolist (file (org-agenda-files))
+      (when (file-exists-p file)
+        (with-current-buffer (find-file-noselect file)
+          (org-with-wide-buffer
+           (goto-char (point-min))
+           ;; 遍历所有标题行
+           (while (re-search-forward org-complex-heading-regexp nil t)
+             (let* ((todo-state (org-get-todo-state))
+                    (heading (org-get-heading t t t t))
+                    (closed-str (org-entry-get (point) "CLOSED"))
+                    (sched-str (org-entry-get (point) "SCHEDULED")))
+               ;; 只有状态是 DONE 且有 CLOSED 时间戳才处理
+               (when (and (string-equal todo-state "DONE") closed-str)
+                 (let* ((closed-time (org-time-string-to-time closed-str))
+                        (closed-seconds (float-time closed-time)))
+                   ;; 检查完成时间是否在 30 天内
+                   (when (> closed-seconds since-seconds)
+                     (let ((duration-info "无计划时间")
+                           (sched-out "N/A"))
+                       ;; 如果有计划时间，进行计算
+                       (when sched-str
+                         (let* ((sched-time (org-time-string-to-time sched-str))
+                                (diff-hours (/ (- closed-seconds (float-time sched-time)) 3600.0)))
+                           (setq sched-out sched-str)
+                           (setq duration-info 
+                                 (if (>= (abs diff-hours) 24)
+                                     (format "执行跨度: %.1f 天" (/ diff-hours 24.0))
+                                   (format "执行跨度: %.1f 小时" diff-hours)))))
+                       ;; 存入列表
+                       (push (format "* 任务: %s\n  - 计划: %s\n  - 完成: %s\n  - %s"
+                                     heading sched-out closed-str duration-info)
+                             tasks))))))))))
+      ;; 写入文件逻辑
+      (if tasks
+          (with-temp-file output-file
+            (insert (format "#+TITLE: 月度任务执行报告\n#+DATE: %s\n" (format-time-string "%Y-%m-%d")))
+            (insert "# 说明: 跨度 = 完成时间 - 计划时间\n\n")
+            (insert (mapconcat #'identity (reverse tasks) "\n\n")))
+        (message "过去 %d 天内没有发现符合条件的 DONE 任务。" days-back))
+      (when tasks
+        (message "导出完成！共 %d 项，文件: %s" (length tasks) output-file)))))
+
+(after! cal-china-x
+  (setq calendar-holidays cal-china-x-chinese-holidays ;; 使用中国的节日来代替原来的默认节日
+        )
+  )
+
 (after! org
   (setq
    ;; 默认显示周视图
@@ -453,7 +509,6 @@
           (org-agenda-start-day (format-time-string "%Y-%m-01"))))))
 
 (setq org-agenda-include-diary t ;; agenda display diary(在 agenda 中显示 diary)
-      calendar-holidays cal-china-x-chinese-holidays ;; 使用中国的节日来代替原来的默认节日
       )
 
 (defun my/filter-chinese-date-str (str)
@@ -644,14 +699,21 @@
 ;;   :models '(deepseek-chat deepseek-coder))
 
 ;; OPTIONAL configuration: set as the default gptel backend
-(setq gptel-model   'deepseek-chat
-      gptel-backend
-      (gptel-make-openai "DeepSeek"     ;Any name you want
-        :host "api.deepseek.com"
-        :endpoint "/chat/completions"
-        :stream t
-        :key "sk-0f839c4be8d4448eb5efd08a815684ba"             ;can be a function that returns the key
-        :models '(deepseek-chat deepseek-coder)))
+;; (setq gptel-model   'deepseek-chat
+;;       gptel-backend
+;;       (gptel-make-openai "DeepSeek"     ;Any name you want
+;;         :host "api.deepseek.com"
+;;         :endpoint "/chat/completions"
+;;         :stream t
+;;         :key "sk-0f839c4be8d4448eb5efd08a815684ba"             ;can be a function that returns the key
+;;         :models '(deepseek-chat deepseek-coder)))
+
+;; gemini
+(setq gptel-model 'gemini-3-flash-preview  ;; 设置默认模型，也可以用 gemini-1.5-pro
+      gptel-backend (gptel-make-gemini "Gemini"
+                      :key "AIzaSyCJLEt_hlvXo9-NsEKbmwfs2GGDDuds3rA"
+                      :stream t) ;; 开启流式传输，体验更流畅
+      )
 
 ;; Ollama
 ;; (gptel-make-ollama "Ollama"             ;Any name of your choosing
