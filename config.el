@@ -515,11 +515,11 @@
 
           ;; 发起请求
           (gptel-request
-              (format "你是一个专业的生产力专家。请分析以下这份任务执行报告：\n\n%s\n\n请从『时间利用率』、『计划达成度』和『下月改进建议』三个维度给我一个毒舌但有用的复盘。" 
+              (format "你是一个专业的生产力专家。请分析以下这份任务执行报告：\n\n%s\n\n请从『时间利用率』、『计划达成度』和『下月改进建议』三个维度给我一个毒舌但有用的复盘。\n\n并通过我这个月完成的任务内容，制定出我下个月的计划。" 
                       data-content)
             :buffer output-buffer
             :position (with-current-buffer output-buffer (point-max)) ;; 强制指定插入到目标 Buffer 的末尾
-            :system "你是一个严格的生产力导师，擅长从数据中发现用户拖延的借口。")
+            :system "你是一个严格的生产力导师，擅长从数据中发现用户拖延的借口。也擅长制定计划。")
           
           (message "已成功发起请求，请查看 %s" out-buf-name))
       (message "错误：找不到导出文件，请检查路径。"))))
@@ -544,6 +544,11 @@
    org-log-done 'note ;; 记录时间并提示输入备注
    org-log-into-drawer t ;; 将状态变更记录放入 :LOGBOOK: 抽屉
    ))
+
+(after! org
+  (setcar (nthcdr 0 org-emphasis-regexp-components) " \t('\"{[:nonascii:]")
+  (setcar (nthcdr 1 org-emphasis-regexp-components) "- \t.,:!?;'\")}\\[[:nonascii:]")
+  (org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components))
 
 (setq org-agenda-custom-commands
       '(("w" "周计划 (周一开启)"
