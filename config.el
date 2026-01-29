@@ -768,6 +768,12 @@
                       :key "AIzaSyCJLEt_hlvXo9-NsEKbmwfs2GGDDuds3rA"
                       :stream t) ;; 开启流式传输，体验更流畅
       )
+;; 绑定一个超级快捷键 SPC n g
+(map! :leader
+      :prefix ("n" . "notes")
+      :desc "AI chat window" "g" #'gptel
+      :desc "AI msg send" "h" #'gptel-send
+      )
 
 ;; Ollama
 ;; (gptel-make-ollama "Ollama"             ;Any name of your choosing
