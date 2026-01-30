@@ -799,10 +799,26 @@
 ;;---------------------------------------------------------------------------
 ;;------------------------- AI-LLM ------------------------------------------
 ;;---------------------------------------------------------------------------
-;; (use-package! gptel
-;;   :config
-;;   (setq! gptel-api-key "sk-0f839c4be8d4448eb5efd08a815684ba")
-;;   )
+(use-package! gptel
+  :config
+  ;; --- 配置 1：Gemini (使用环境变量中的 Key) ---
+  (setq gptel-gemini-backend
+        (gptel-make-gemini "Gemini"
+          :key (getenv "GEMINI_API_KEY")
+          :stream t))
+
+  ;; --- 配置 2：ChatGPT (自定义 Server/中转) ---
+  (setq gptel-openai-custom-backend
+        (gptel-make-openai "Custom-ChatGPT"
+          :host "api.chatanywhere.org"      ; 这里填写你的自定义服务器域名 (不带 http://)
+          :endpoint "/v1/chat/completions"  ; 标准 OpenAI 路径
+          :stream t
+          :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
+          :models '(gpt-4o gpt-4-turbo gpt-3.5-turbo))) ; 定义可选模型
+
+  ;; --- 设置默认模型 ---
+  (setq-default gptel-backend gptel-gemini-backend
+                gptel-model 'gemini-2.5-flash-lite))
 
 ;; DeepSeek offers an OpenAI compatible API
 ;; (gptel-make-openai "DeepSeek"       ;Any name you want
@@ -822,12 +838,6 @@
 ;;         :key "sk-0f839c4be8d4448eb5efd08a815684ba"             ;can be a function that returns the key
 ;;         :models '(deepseek-chat deepseek-coder)))
 
-;; gemini
-(setq gptel-model 'gemini-3-flash-preview  ;; 设置默认模型，也可以用 gemini-1.5-pro
-      gptel-backend (gptel-make-gemini "Gemini"
-                      :key "AIzaSyCJLEt_hlvXo9-NsEKbmwfs2GGDDuds3rA"
-                      :stream t) ;; 开启流式传输，体验更流畅
-      )
 ;; 绑定一个超级快捷键 SPC n g
 (map! :leader
       :prefix ("n" . "notes")
