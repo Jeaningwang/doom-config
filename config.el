@@ -611,11 +611,28 @@
               cn-date-str
               ))))
 
+(defun my/get-taskwarrior-descriptions ()
+  "获取当前 Taskwarrior 中所有待办任务的标题列表。"
+  (if (executable-find "task")
+      (let ((output (shell-command-to-string "task status:pending or status:waiting export")))
+        ;; 解析 JSON 以获取 description 字段
+        ;; 这里使用简单的正则匹配来提取，避免引入额外的 json 解析库依赖
+        (let ((titles '())
+              (start 0))
+          (while (string-match "\"description\":\"\\([^\"]+\\)\"" output start)
+            (push (match-string 1 output) titles)
+            (setq start (match-end 0)))
+          titles))
+    '()))
+
 (defun my/org-to-taskwarrior-script ()
-  "将 Org-agenda 中【既是 TODO 又有 SCHEDULED】的任务导出为 Taskwarrior 脚本。"
+  "将 Org 任务导出为 Taskwarrior 脚本，自动排除已存在的任务和“循环”标签。"
   (interactive)
   (let* ((output-file (expand-file-name "~/Downloads/sync_tasks.sh"))
-         (tasks '()))
+         (tasks '())
+         (exclude-tag "循环")
+         ;; 1. 预先获取 Taskwarrior 中已存在的任务描述
+         (existing-tasks (my/get-taskwarrior-descriptions)))
     (dolist (file (org-agenda-files))
       (when (file-exists-p file)
         (with-current-buffer (find-file-noselect file)
@@ -624,23 +641,27 @@
            (while (re-search-forward org-complex-heading-regexp nil t)
              (let* ((element (org-element-at-point))
                     (todo-state (org-element-property :todo-keyword element))
-                    (heading (org-element-property :title element))
+                    (heading (substring-no-properties (or (org-element-property :title element) "")))
                     (priority (org-element-property :priority element))
                     (tags (org-element-property :tags element))
                     (sched-prop (org-element-property :scheduled element)))
                
-               ;; 核心筛选逻辑：必须是 TODO 状态 且 必须有计划时间
+               ;; 核心筛选逻辑：
+               ;; 1. 状态为 TODO 且有计划时间
+               ;; 2. 不含“循环”标签
+               ;; 3. 任务标题不在 Taskwarrior 的已有列表中
                (when (and (string-equal todo-state "TODO") 
-                          sched-prop)
+                          sched-prop
+                          (not (member exclude-tag tags))
+                          (not (member heading existing-tasks))) ; 查重逻辑
+                 
                  (let* ((task-cmd (format "task add %s" (shell-quote-argument heading)))
-                        ;; 安全转换时间格式
                         (time-obj (org-timestamp-to-time sched-prop))
                         (date-str (format-time-string "%Y-%m-%d" time-obj)))
                    
-                   ;; 1. 添加等待日期 (Taskwarrior 的 wait 属性)
-                   (setq task-cmd (concat task-cmd " wait:" date-str))
+                   (setq task-cmd (concat task-cmd " wait:" date-str " scheduled:" date-str))
                    
-                   ;; 2. 处理优先级 (Org 65=A, 66=B, 67=C)
+                   ;; 优先级映射
                    (when priority
                      (setq task-cmd (concat task-cmd 
                                             (cond ((eq priority 65) " priority:H")
@@ -648,25 +669,24 @@
                                                   ((eq priority 67) " priority:L")
                                                   (t "")))))
                    
-                   ;; 3. 处理标签
+                   ;; 标签处理
                    (when tags
                      (dolist (tag tags)
                        (setq task-cmd (concat task-cmd " +" (shell-quote-argument tag)))))
                    
                    (push task-cmd tasks)))))))))
     
-    ;; 写入文件
+    ;; 写入脚本文件
     (if tasks
-        (with-temp-file output-file
-          (insert "#!/bin/bash\n")
-          (insert "# 自动生成的 Taskwarrior 同步脚本 (仅限有计划的任务)\n\n")
-          (insert (mapconcat #'identity (reverse tasks) "\n"))
-          (insert "\n\necho '同步完成！'\n"))
-      (message "未发现同时符合 TODO 且有 SCHEDULED 的任务。"))
-    
-    (when tasks
-      (chmod output-file #o755)
-      (message "已导出 %d 个任务至: %s" (length tasks) output-file))))
+        (progn
+          (with-temp-file output-file
+            (insert "#!/bin/bash\n")
+            (insert "# 自动生成的增量同步脚本\n\n")
+            (insert (mapconcat #'identity (reverse tasks) "\n"))
+            (insert "\n\necho '增量同步完成！'\n"))
+          (chmod output-file #o755)
+          (message "已导出 %d 个新任务至: %s" (length tasks) output-file))
+      (message "所有任务均已在 Taskwarrior 中或符合排除条件，无需同步。"))))
 
 (map! :leader
       (:prefix ("n" . "notes")
