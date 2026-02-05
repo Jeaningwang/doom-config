@@ -227,6 +227,9 @@
 ;;------------------------- JavaScript -------------------------------
 ;;--------------------------------------------------------------------
 (setq org-babel-default-header-args:js '((:results . "output")))
+(add-to-list 'org-src-lang-modes '("javascript" . js))
+(defalias 'org-babel-execute:javascript 'org-babel-execute:js)
+(setq org-babel-default-header-args:javascript '((:results . "output")))
 
 
 ;;--------------------------------------------------------------------
