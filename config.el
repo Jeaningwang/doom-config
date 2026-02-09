@@ -518,11 +518,11 @@
 
           ;; 发起请求
           (gptel-request
-           (format "你是一个专业的生产力专家。请分析以下这份任务执行报告：\n\n%s\n\n请从『时间利用率』、『计划达成度』和『下月改进建议』三个维度给我一个毒舌但有用的复盘。\n\n并通过我这个月完成的任务内容，制定出我下个月的计划。" 
-                   data-content)
-           :buffer output-buffer
-           :position (with-current-buffer output-buffer (point-max)) ;; 强制指定插入到目标 Buffer 的末尾
-           :system "你是一个严格的生产力导师，擅长从数据中发现用户拖延的借口。也擅长制定计划。")
+              (format "你是一个专业的生产力专家。请分析以下这份任务执行报告：\n\n%s\n\n请从『时间利用率』、『计划达成度』和『下月改进建议』三个维度给我一个毒舌但有用的复盘。\n\n并通过我这个月完成的任务内容，制定出我下个月的计划。" 
+                      data-content)
+            :buffer output-buffer
+            :position (with-current-buffer output-buffer (point-max)) ;; 强制指定插入到目标 Buffer 的末尾
+            :system "你是一个严格的生产力导师，擅长从数据中发现用户拖延的借口。也擅长制定计划。")
           
           (message "已成功发起请求，请查看 %s" out-buf-name))
       (message "错误：找不到导出文件，请检查路径。"))))
@@ -837,7 +837,18 @@
           :endpoint "/v1/chat/completions"  ; 标准 OpenAI 路径
           :stream t
           :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
+          ;; :key (getenv "CUSTOM_CHATANYWHERE_PAID_API_KEY")
           :models '(gpt-4o gpt-4-turbo gpt-3.5-turbo))) ; 定义可选模型
+
+  ;; --- 配置3 :Claude ---
+  (setq claude-custom-backend
+        (gptel-make-anthropic "Custom-Claude"
+          :host "api.chatanywhere.org"
+          :endpoint "/v1/chat/completions"
+          :stream t
+          :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
+          ;; :key (getenv "CUSTOM_CHATANYWHERE_PAID_API_KEY")
+          ))
 
   ;; --- 设置默认模型 ---
   (setq-default gptel-backend gptel-gemini-backend
