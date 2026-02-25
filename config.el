@@ -759,6 +759,7 @@
 ;;-------------------------Beancount-----------------------------------------
 ;;---------------------------------------------------------------------------
 (add-to-list 'auto-mode-alist '("\\.bean\\'" . beancount-mode))
+(setq lsp-beancount-journal-file (concat (getenv "BEANCOUNT_HOME") "main.bean"))
 
 
 ;;--------------------------------------------------------------------------
@@ -803,9 +804,7 @@
 ;;---------------------------------------------------------------------------
 (use-package! lsp-mode
   :custom
-  (lsp-modeline-code-action-fallback-icon
-   (if doom--system-linux-p "󰌵" lsp-modeline-code-action-fallback-icon)
-   )
+  (lsp-modeline-code-action-fallback-icon "󰌵")
   )
 
 
