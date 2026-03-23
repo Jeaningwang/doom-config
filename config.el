@@ -985,3 +985,20 @@
 (map! :leader
       (:prefix ("t" . "toggle")
        :desc "Proxy" "p" #'my/toggle-proxy))
+
+
+;;---------------------------------------------------------------------------
+;;------------------------- cursor-agent ---------------------------------------
+;;---------------------------------------------------------------------------
+(after! cursor-agent
+  (setq cursor-agent-default-model "Auto")
+  ;; Keybindings
+  (map! :leader
+        (:prefix "c"
+                 (:prefix ("A" . "cursor-agent")
+                          "a" #'cursor-agent-prompt
+                          "i" #'cursor-agent-interactive
+                          "r" #'cursor-agent-region
+                          "I" #'cursor-agent-install
+                          "L" #'cursor-agent-login
+                          "s" #'cursor-agent-status))))
