@@ -1002,3 +1002,15 @@
                           "I" #'cursor-agent-install
                           "L" #'cursor-agent-login
                           "s" #'cursor-agent-status))))
+
+
+;;---------------------------------------------------------------------------
+;;------------------------- paw ---------------------------------------------
+;;---------------------------------------------------------------------------
+(use-package! paw
+  :config
+  (setq paw-online-word-servers '(eudic))
+  (setq paw-dictionary-function 'paw-eudic-search-details)
+  (setq paw-authorization-keys '(("eudic" . (getenv "EUDIC_API_KEY"))))
+  )
+
