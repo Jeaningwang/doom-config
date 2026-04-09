@@ -823,6 +823,14 @@
 ;;---------------------------------------------------------------------------
 (use-package! gptel
   :config
+  ;; Broken Customize can save `gptel-directives' as a string; gptel then errors
+  ;; with "Wrong type argument: listp" on any (alist-get _ gptel-directives).
+  (when (and (boundp 'gptel-directives) (not (listp gptel-directives)))
+    (setq gptel-directives
+          '((default . "You are a large language model living in Emacs and a helpful assistant. Respond concisely.")
+            (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
+            (writing . "You are a large language model and a writing assistant. Respond concisely.")
+            (chat . "You are a large language model and a conversation partner. Respond concisely."))))
   ;; --- 配置 1：Gemini (使用环境变量中的 Key) ---
   (setq gptel-gemini-backend
         (gptel-make-gemini "Gemini"
@@ -849,9 +857,47 @@
           ;; :key (getenv "CUSTOM_CHATANYWHERE_PAID_API_KEY")
           ))
 
+  ;; system prompt
+  (add-to-list 'gptel-directives '(Wd-Personal . "
+你是一名生活在Emacs中的大语言模型，任何回答都要简明扼要。
+
+约束：
+1. 自检：提交前核对功能与逻辑正确性。
+"))
+
+  (add-to-list 'gptel-directives '(编码助手 . "
+职责
+你的职责是帮助我完成编写代码、修复代码和理解代码等任务。我会与你分享我的目标和项目，你将协助我编写所需的代码以取得成功。
+
+目标
+* 代码创建：尽可能编写能够实现我目标的完整代码。
+* 技能培训：教我代码开发的步骤。
+* 清晰指导：以易于理解的方式，解释如何实现或编写代码。
+* 详尽文档：为每个步骤或代码的每个部分提供清晰的文档说明。
+
+整体方向
+* 记住全程保持积极、耐心、支持的语气。 
+* 使用清晰、简单的语言，假设我具备基本的代码理解能力。
+* 切勿讨论任何与编程无关的话题！如果我提到与编程无关的事物，请道歉并将话题转回编程。
+* 在整个对话中记住上下文，确保你的想法和回应与之前的所有对话相关。
+* 如果我问候你或问你可以做什么，请简要说明你的职责。保持简洁明了，并给出一些简短的例子。
+
+分步指引
+* 了解我的要求：收集编写代码所需的信息。询问有关目的、用途及其他相关细节的澄清问题，以确保你理解我的要求。
+* 概略介绍解决方案：清晰概述代码的功能和工作原理。解释开发步骤、假设条件和限制。 
+* 展示代码和实现说明：以便于复制粘贴的方式呈现代码，解释你的设计思路以及任何可以调整的变量或参数。提供清晰的代码实现步骤说明。
+"))
+
+
   ;; --- 设置默认模型 ---
-  (setq-default gptel-backend gptel-gemini-backend
-                gptel-model 'gemini-2.5-flash-lite))
+  ;; `gptel-directives' must be an alist; if Customize saved a string (e.g. "en"),
+  ;; (alist-get ... gptel-directives) signals wrong-type-argument listp.
+  (setq-default gptel-backend gptel-openai-custom-backend
+                gptel-model 'gpt-3.5-turbo
+                gptel--system-message
+                (when (listp gptel-directives)
+                  (alist-get 'Wd-Personal gptel-directives)))
+  )
 
 ;; DeepSeek offers an OpenAI compatible API
 ;; (gptel-make-openai "DeepSeek"       ;Any name you want
@@ -890,37 +936,6 @@
 ;;                  :host "localhost:11434"
 ;;                  :stream t
 ;;                  :models '(mistral:latest)))
-
-;; system prompt
-(add-to-list 'gptel-directives '(Wd-Personal . "
-你是一名生活在Emacs中的大语言模型，任何回答都要简明扼要。
-
-约束：
-1. 自检：提交前核对功能与逻辑正确性。
-"))
-
-(add-to-list 'gptel-directives '(编码助手 . "
-职责
-你的职责是帮助我完成编写代码、修复代码和理解代码等任务。我会与你分享我的目标和项目，你将协助我编写所需的代码以取得成功。
-
-目标
-* 代码创建：尽可能编写能够实现我目标的完整代码。
-* 技能培训：教我代码开发的步骤。
-* 清晰指导：以易于理解的方式，解释如何实现或编写代码。
-* 详尽文档：为每个步骤或代码的每个部分提供清晰的文档说明。
-
-整体方向
-* 记住全程保持积极、耐心、支持的语气。 
-* 使用清晰、简单的语言，假设我具备基本的代码理解能力。
-* 切勿讨论任何与编程无关的话题！如果我提到与编程无关的事物，请道歉并将话题转回编程。
-* 在整个对话中记住上下文，确保你的想法和回应与之前的所有对话相关。
-* 如果我问候你或问你可以做什么，请简要说明你的职责。保持简洁明了，并给出一些简短的例子。
-
-分步指引
-* 了解我的要求：收集编写代码所需的信息。询问有关目的、用途及其他相关细节的澄清问题，以确保你理解我的要求。
-* 概略介绍解决方案：清晰概述代码的功能和工作原理。解释开发步骤、假设条件和限制。 
-* 展示代码和实现说明：以便于复制粘贴的方式呈现代码，解释你的设计思路以及任何可以调整的变量或参数。提供清晰的代码实现步骤说明。
-"))
 
 
 ;;---------------------------------------------------------------------------
@@ -1011,6 +1026,525 @@
   :config
   (setq paw-online-word-servers '(eudic))
   (setq paw-dictionary-function 'paw-eudic-search-details)
-  (setq paw-authorization-keys '(("eudic" . (getenv "EUDIC_API_KEY"))))
+  (setq paw-authorization-keys `(("eudic" . ,(getenv "EUDIC_API_KEY"))))
   )
 
+
+;;---------------------------------------------------------------------------
+;;------------------------- Eudic daily review ------------------------------
+;;---------------------------------------------------------------------------
+(after! (request gptel paw)
+  (require 'cl-lib)
+  (require 'json)
+  (require 'subr-x)
+  (require 'url)
+
+  (defgroup my/eudic-review nil
+    "Daily Eudic review workflow powered by gptel."
+    :group 'applications)
+
+  (defcustom my/eudic-review-language "en"
+    "Language parameter used for Eudic studylist APIs."
+    :type 'string
+    :group 'my/eudic-review)
+
+  (defcustom my/eudic-review-studylist-id 0
+    "Wordbook id: query `category_id' for GET .../studylist/words, JSON `id' for DELETE."
+    :type 'integer
+    :group 'my/eudic-review)
+
+  (defcustom my/eudic-review-page-size 200
+    "Page size for GET .../studylist/words. Larger = fewer HTTP round-trips."
+    :type 'integer
+    :group 'my/eudic-review)
+
+  (defcustom my/eudic-review-strict-today-only t
+    "If non-nil, only keep words added today.
+When the API payload has no time fields, raise an error instead of using all words."
+    :type 'boolean
+    :group 'my/eudic-review)
+
+  (defcustom my/eudic-review-buffer "*Eudic Daily Review*"
+    "Buffer name used to display review progress."
+    :type 'string
+    :group 'my/eudic-review)
+
+  (defcustom my/eudic-review-interactive-fallback t
+    "If non-nil, fallback to interactive word selection when today filtering is ambiguous."
+    :type 'boolean
+    :group 'my/eudic-review)
+
+  (defcustom my/eudic-review-enable-note-due t
+    "If non-nil, include words whose note contains REVIEW_AGAIN:today.
+This scans entries not already matched by add-time; each check may call the
+note API (see `my/eudic-review-note-due-max-lookups')."
+    :type 'boolean
+    :group 'my/eudic-review)
+
+  (defcustom my/eudic-review-note-due-max-lookups nil
+    "Cap note API calls when building the due-by-note set; nil = unlimited.
+Use a number (e.g. 200) if the studylist is huge and review feels too slow."
+    :type '(choice (const :tag "Unlimited" nil) (natnum :tag "Max calls"))
+    :group 'my/eudic-review)
+
+  (defun my/eudic--auth-token ()
+    "Resolve Eudic API token from `paw-authorization-keys'."
+    (let ((raw
+           (cond ((stringp paw-authorization-keys) paw-authorization-keys)
+                 ((and (listp paw-authorization-keys)
+                       (or (assoc "eudic" paw-authorization-keys)
+                           (assoc 'eudic paw-authorization-keys)))
+                  (cdr (or (assoc "eudic" paw-authorization-keys)
+                           (assoc 'eudic paw-authorization-keys))))
+                 (t ""))))
+      (cond ((stringp raw) raw)
+            ((and (consp raw) (functionp (car raw))) (eval raw t))
+            (t (format "%s" raw)))))
+
+  (defun my/eudic--authorization-value ()
+    "Return Authorization header value for Frdic Open API (scheme `NIS')."
+    (let* ((raw (my/eudic--auth-token))
+           (tok (string-trim (if (stringp raw) raw (format "%s" raw)))))
+      ;; Header line must not contain CR/LF/TAB; those confuse proxies and IIS.
+      (setq tok (replace-regexp-in-string "[\r\n\t]" "" tok))
+      (cond
+       ((string-empty-p tok) "")
+       ((string-match-p "\\`[Nn][Ii][Ss][[:space:]]+" tok) tok)
+       (t (concat "NIS " tok)))))
+
+  (defun my/eudic--headers (method data)
+    "Return headers for Eudic OpenAPI.
+Do not set User-Agent here: `url-http-create-request' already emits one;
+a second User-Agent line makes IIS/HTTP.sys return \"invalid header name\".
+Do not send Content-Type on GET; only with body (POST/DELETE/PUT)."
+    (let ((method (upcase (or method "GET")))
+          (auth (my/eudic--authorization-value)))
+      (append
+       (unless (string-empty-p auth)
+         (list (cons "Authorization" auth)))
+       (when (and data (member method '("POST" "DELETE" "PUT")))
+         '(("Content-Type" . "application/json"))))))
+
+  (defun my/eudic--build-query-string (params)
+    "Build URL query string from PARAMS alist (symbol or string keys).
+Each pair is turned into a two-element list (KEY VAL); `url-build-query-string'
+requires that shape — dotted pairs (KEY . VAL) break its internal `mapcar'."
+    (when params
+      (unless (listp params)
+        (error "Eudic: query params must be a list, got %S" params))
+      (url-build-query-string
+       (mapcar (lambda (p)
+                 (unless (consp p)
+                   (error "Eudic: bad query pair %S" p))
+                 (list (format "%s" (car p))
+                       (format "%s" (cdr p))))
+               params))))
+
+  (defun my/eudic--request-json-sync (url &rest args)
+    "HTTP JSON via `url-retrieve-synchronously' (no external curl).
+ARGS plist: :type (GET/POST/DELETE), :params query alist for GET, :data JSON string for body."
+    (let* ((plist args)
+           (method (upcase (or (plist-get plist :type) "GET")))
+           (params (plist-get plist :params))
+           (data (plist-get plist :data))
+           (full-url (if (and params (string= method "GET"))
+                         (progn
+                           (unless (listp params)
+                             (error "Eudic: :params must be an alist for GET, got %S" params))
+                           (concat url "?" (my/eudic--build-query-string params)))
+                       url))
+           (url-request-method method)
+           (url-request-extra-headers (my/eudic--headers method data))
+           (url-request-data (when (and data (member method '("POST" "DELETE" "PUT")))
+                               (if (stringp data)
+                                   data
+                                 (error "Eudic: :data must be a JSON string")))))
+      ;; 4th arg is TIMEOUT in seconds (Emacs 29+); must be a number or nil — `t' is invalid and
+      ;; triggers "Invalid time specification" inside `time-less-p'.
+      ;; Inhibit cookies: a malformed stored Cookie header also triggers IIS 400.
+      (let ((buf (url-retrieve-synchronously full-url t t nil)))
+        (unless buf
+          (error "Eudic: no response (check network/DNS/HTTPS)"))
+        (unwind-protect
+            (with-current-buffer buf
+              (set-buffer-multibyte t)
+              (goto-char (point-min))
+              (unless (looking-at "^HTTP/[^ ]+ \\([0-9][0-9][0-9]\\)")
+                (error "Eudic: invalid HTTP response"))
+              (let ((code (string-to-number (match-string 1))))
+                (unless (<= 200 code 299)
+                  (goto-char (point-min))
+                  (let ((body ""))
+                    (when (re-search-forward "\r?\n\r?\n" nil t)
+                      (setq body (buffer-substring-no-properties (point) (point-max))))
+                    (error "Eudic HTTP %d — %s" code body))))
+              (goto-char (point-min))
+              (unless (re-search-forward "\r?\n\r?\n" nil t)
+                (error "Eudic: empty body"))
+              (let ((json-object-type 'alist)
+                    (json-array-type 'list)
+                    (json-key-type 'symbol)
+                    (parsed (condition-case nil
+                                (json-read)
+                              (error nil))))
+                ;; `json-read' can return a string/number; `alist-get' needs an alist.
+                (if (and parsed (listp parsed))
+                    parsed
+                  '((data . ())))))
+          (kill-buffer buf)))))
+
+  (defun my/eudic--entry-word (entry)
+    "Extract word string from ENTRY."
+    (cond ((stringp entry) entry)
+          ((listp entry) (format "%s" (or (my/eudic--alist-get 'word entry) "")))
+          (t "")))
+
+  (defun my/eudic--same-local-day-p (time-str)
+    "Return non-nil when TIME-STR falls on local today."
+    (when (and time-str (not (string-empty-p time-str)))
+      (let* ((ts (format "%s" time-str))
+             ;; Eudic uses ISO8601 like 2026-02-02T03:07:00Z.
+             (tm (or (ignore-errors (date-to-time ts))
+                     (ignore-errors (parse-time-string ts)))))
+        (when tm
+          (string=
+           (format-time-string "%Y-%m-%d" (current-time))
+           (format-time-string "%Y-%m-%d" tm))))))
+
+  (defun my/eudic--extract-date-from-time (time-str)
+    "Extract local YYYY-MM-DD date from TIME-STR."
+    (when (and time-str (not (string-empty-p (format "%s" time-str))))
+      (let ((tm (or (ignore-errors (date-to-time (format "%s" time-str)))
+                    (ignore-errors (parse-time-string (format "%s" time-str))))))
+        (when tm
+          (format-time-string "%Y-%m-%d" tm)))))
+
+  (defun my/eudic--alist-get (key alist)
+    "Like `alist-get' but never passes a non-list as ALIST."
+    (when (and key (listp alist))
+      (alist-get key alist)))
+
+  (defun my/eudic--studylist-entry-p (x)
+    "Non-nil if X is a JSON object (alist or plist), not a bare string in `data'."
+    (and x (listp x)
+         (let ((c (car-safe x)))
+           (or (consp c) (keywordp c)))))
+
+  (defun my/eudic--get-word-note (word &optional memo)
+    "Fetch note text for WORD from Eudic.
+MEMO, if non-nil, is an `eq' hash-table: word string -> note string, to avoid
+duplicate HTTP requests in one command."
+    (when (and word (not (string-empty-p word)))
+      (let ((cached (if memo (gethash word memo :eudic-no-note) :eudic-no-note)))
+        (if (not (eq cached :eudic-no-note))
+            cached
+          (let* ((resp (my/eudic--request-json-sync
+                        "https://api.frdic.com/api/open/v1/studylist/note"
+                        :type "GET"
+                        :params `(("language" . ,my/eudic-review-language)
+                                  ("word" . ,word))))
+                 (data (my/eudic--alist-get 'data resp))
+                 (note
+                  (cond ((stringp data) data)
+                        ((and (listp data) (my/eudic--studylist-entry-p data))
+                         (or (my/eudic--alist-get 'note data)
+                             (my/eudic--alist-get 'text data)
+                             (format "%s" data)))
+                        ((listp data) (format "%s" data))
+                        (t (format "%s" data)))))
+            (when memo (puthash word note memo))
+            note)))))
+
+  (defun my/eudic--due-by-note-entries (data filtered today)
+    "From DATA, entries not in FILTERED whose note contains REVIEW_AGAIN:TODAY.
+Uses a hash memo and optional `my/eudic-review-note-due-max-lookups'."
+    (let ((memo (make-hash-table :test 'equal))
+          (api-n 0)
+          (cap my/eudic-review-note-due-max-lookups))
+      (cl-remove-if-not
+       (lambda (item)
+         (and (my/eudic--studylist-entry-p item)
+              (not (memq item filtered))
+              (let ((word (my/eudic--entry-word item)))
+                (and (not (string-empty-p word))
+                     (if (and cap (>= api-n cap))
+                         nil
+                       (let ((note
+                              (ignore-errors
+                                (let ((miss (eq (gethash word memo :eudic-no-note)
+                                                :eudic-no-note)))
+                                  (when miss (cl-incf api-n))
+                                  (my/eudic--get-word-note word memo)))))
+                         (and (stringp note)
+                              (string-match-p
+                               (regexp-quote (format "REVIEW_AGAIN:%s" today))
+                               note))))))))
+       data)))
+
+  (defun my/eudic--studylist-words--normalize-batch (resp)
+    "Return list of word entries from one GET studylist/words response."
+    (unless (listp resp)
+      (setq resp '((data . ()))))
+    (let* ((raw (my/eudic--alist-get 'data resp))
+           (batch (cond ((vectorp raw) (append raw nil))
+                        ((listp raw) raw)
+                        (t '()))))
+      ;; API sometimes mixes strings (e.g. language codes) into `data'; skip them.
+      (cl-remove-if-not #'my/eudic--studylist-entry-p batch)))
+
+  (defun my/eudic--fetch-all-studylist-words ()
+    "Fetch all words: GET .../studylist/words?category_id=&page=&page_size= (OpenAPI doc)."
+    (let* ((url "https://api.frdic.com/api/open/v1/studylist/words")
+           (page 1)
+           (all '())
+           (done nil))
+      (while (not done)
+        (let* ((params `(("language" . ,my/eudic-review-language)
+                         ("category_id" . ,(number-to-string my/eudic-review-studylist-id))
+                         ("page" . ,(number-to-string page))
+                         ("page_size" . ,(number-to-string my/eudic-review-page-size))))
+               (resp (my/eudic--request-json-sync url :type "GET" :params params))
+               (batch (my/eudic--studylist-words--normalize-batch resp)))
+          (setq all (append all batch))
+          (if (or (null batch) (= (length batch) 0)
+                  (< (length batch) my/eudic-review-page-size))
+              (setq done t)
+            (setq page (1+ page)))))
+      all))
+
+  (defun my/eudic--get-daily-words ()
+    "Fetch daily words from default Eudic studylist."
+    (let* ((data (my/eudic--fetch-all-studylist-words))
+           (time-keys '(created_at create_time add_time added_at date datetime createdAt createTime addTime))
+           (filtered
+            (cl-remove-if-not
+             (lambda (item)
+               (and (my/eudic--studylist-entry-p item)
+                    (let ((time-str nil))
+                      (dolist (k time-keys)
+                        (when (and (not time-str) (my/eudic--alist-get k item))
+                          (setq time-str (format "%s" (my/eudic--alist-get k item)))))
+                      (my/eudic--same-local-day-p time-str))))
+             data))
+           (today (format-time-string "%Y-%m-%d"))
+           (due-by-note
+            (if my/eudic-review-enable-note-due
+                (my/eudic--due-by-note-entries data filtered today)
+              nil))
+           (combined (delete-dups (append filtered due-by-note))))
+      (cond
+       ((not my/eudic-review-strict-today-only) data)
+       ((> (length combined) 0) combined)
+       (my/eudic-review-interactive-fallback
+        (let* ((date->entries (make-hash-table :test 'equal))
+               (dates '()))
+          (dolist (it data)
+            (when (my/eudic--studylist-entry-p it)
+              (let ((d (my/eudic--extract-date-from-time
+                        (or (my/eudic--alist-get 'add_time it)
+                            (my/eudic--alist-get 'created_at it)
+                            (my/eudic--alist-get 'create_time it)
+                            (my/eudic--alist-get 'added_at it)
+                            (my/eudic--alist-get 'date it)
+                            (my/eudic--alist-get 'datetime it)
+                            (my/eudic--alist-get 'createdAt it)
+                            (my/eudic--alist-get 'createTime it)
+                            (my/eudic--alist-get 'addTime it)))))
+                (when d
+                  (unless (member d dates) (push d dates))
+                  (puthash d (cons it (gethash d date->entries)) date->entries)))))
+          (if (null dates)
+              (user-error
+               "No dated words found in payload; cannot offer date picker. Run `my/eudic-review-debug-api`")
+            (let* ((sorted-dates (sort (copy-sequence dates) #'string<))
+                   (selected-date
+                    (completing-read
+                     "No words for today. Choose a date to review: "
+                     sorted-dates nil t nil nil (car (last sorted-dates)))))
+              (nreverse (copy-sequence (gethash selected-date date->entries)))))))
+       (t
+        (let* ((dates (delq nil
+                            (mapcar (lambda (it)
+                                      (when (my/eudic--studylist-entry-p it)
+                                        (my/eudic--extract-date-from-time
+                                         (or (my/eudic--alist-get 'add_time it)
+                                             (my/eudic--alist-get 'created_at it)
+                                             (my/eudic--alist-get 'create_time it)))))
+                                    data)))
+               (sorted (sort (copy-sequence dates) #'string<))
+               (date-min (car sorted))
+               (date-max (car (last sorted))))
+          (user-error
+           "No daily words matched. Date range in API payload: %s ~ %s. Try `my/eudic-review-strict-today-only' nil, disable `my/eudic-review-enable-note-due', or `my/eudic-review-debug-api'."
+           (or date-min "N/A") (or date-max "N/A")))))))
+
+  (defun my/eudic--append-buffer (fmt &rest args)
+    "Append formatted text into review buffer."
+    (with-current-buffer (get-buffer-create my/eudic-review-buffer)
+      (goto-char (point-max))
+      (insert (apply #'format fmt args) "\n")))
+
+  (defun my/eudic--mark-for-tomorrow (word)
+    "Mark WORD in note with tomorrow reminder."
+    (let* ((tomorrow (format-time-string "%Y-%m-%d"
+                                         (time-add (current-time)
+                                                   (days-to-time 1))))
+           (note (format "[REVIEW_AGAIN:%s]" tomorrow)))
+      (my/eudic--request-json-sync
+       "https://api.frdic.com/api/open/v1/studylist/note"
+       :type "POST"
+       :data (json-encode `(("word" . ,word)
+                            ("language" . ,my/eudic-review-language)
+                            ("note" . ,note))))))
+
+  (defun my/eudic--delete-word (word)
+    "Delete WORD from default Eudic studylist."
+    (my/eudic--request-json-sync
+     "https://api.frdic.com/api/open/v1/studylist/words"
+     :type "DELETE"
+     :data (json-encode `(("id" . ,my/eudic-review-studylist-id)
+                          ("language" . ,my/eudic-review-language)
+                          ("words" . [ ,word ])))))
+
+  (defun my/eudic--ask-gptel (prompt callback)
+    "Send PROMPT by gptel and call CALLBACK with response text."
+    (gptel-request
+        prompt
+      :system "You are an English vocabulary tutor. Return concise and structured output."
+      :callback (lambda (response &rest _)
+                  (funcall callback (if (stringp response)
+                                        response
+                                      (format "%s" response))))))
+
+  (defun my/eudic--judge-pass-p (prompt callback)
+    "Ask gptel to judge PROMPT and call CALLBACK with t/nil."
+    (my/eudic--ask-gptel
+     prompt
+     (lambda (result)
+       (funcall callback (string-match-p "PASS" (upcase (string-trim result)))))))
+
+  (defun my/eudic--report-error (err done-callback)
+    "Record ERR and continue flow via DONE-CALLBACK."
+    (my/eudic--append-buffer "Result: ERROR (%s) -> continue next word." (format "%S" err))
+    (funcall done-callback 'error))
+
+  (defun my/eudic--review-one (word done-callback)
+    "Review one WORD, then call DONE-CALLBACK with result symbol."
+    (let ((analysis-prompt
+           (format
+            "Analyze this word for quick review: %s\nReturn with sections: Meaning, Spelling Focus, Common Collocations, One Example Sentence."
+            word)))
+      (my/eudic--ask-gptel
+       analysis-prompt
+       (lambda (analysis)
+         (condition-case err
+             (let* ((spelling-answer
+                     (progn
+                       (my/eudic--append-buffer "\n=== %s ===\n%s\n" word analysis)
+                       (read-string
+                        (format "Type the exact spelling for this word (hint: %s): "
+                                (make-string (max 1 (length word)) ?*)))))
+                    (meaning-answer
+                     (read-string
+                      (format "Explain the meaning of '%s' in your own words: " word)))
+                    (sentence-answer
+                     (read-string
+                      (format "Write a common sentence using '%s': " word))))
+               (my/eudic--judge-pass-p
+                (format "Target word: %s\nUser spelling: %s\nJudge if spelling is exactly correct. Reply exactly PASS or FAIL."
+                        word spelling-answer)
+                (lambda (spelling-pass)
+                  (my/eudic--judge-pass-p
+                   (format "Target word: %s\nUser meaning explanation: %s\nJudge if this explanation is semantically correct for common usage. Reply exactly PASS or FAIL."
+                           word meaning-answer)
+                   (lambda (meaning-pass)
+                     (my/eudic--judge-pass-p
+                      (format "Target word: %s\nUser sentence: %s\nJudge if sentence is natural, grammatical, and uses the target word correctly in a common context. Reply exactly PASS or FAIL."
+                              word sentence-answer)
+                      (lambda (sentence-pass)
+                        (condition-case err2
+                            (progn
+                              (my/eudic--append-buffer
+                               "Check -> spelling:%s meaning:%s sentence:%s"
+                               (if spelling-pass "PASS" "FAIL")
+                               (if meaning-pass "PASS" "FAIL")
+                               (if sentence-pass "PASS" "FAIL"))
+                              (if (and spelling-pass meaning-pass sentence-pass)
+                                  (progn
+                                    (my/eudic--delete-word word)
+                                    (my/eudic--append-buffer "Result: PASS -> deleted from studylist.")
+                                    (funcall done-callback 'pass))
+                                (progn
+                                  (my/eudic--mark-for-tomorrow word)
+                                  (my/eudic--append-buffer "Result: FAIL -> scheduled for tomorrow.")
+                                  (funcall done-callback 'fail))))
+                          (error
+                           (my/eudic--report-error err2 done-callback))))))))))
+           (error
+            (my/eudic--report-error err done-callback)))))))
+
+  (defun my/eudic-review-daily-words ()
+    "Run full daily review flow for default Eudic studylist."
+    (interactive)
+    (unless (and (my/eudic--auth-token)
+                 (not (string-empty-p (my/eudic--auth-token))))
+      (user-error "Missing EUDIC API key. Please set EUDIC_API_KEY first"))
+    (let* ((words-raw (my/eudic--get-daily-words))
+           (words (mapcar #'my/eudic--entry-word words-raw))
+           (words (cl-remove-if #'string-empty-p words))
+           (total (length words))
+           (passed 0)
+           (failed 0)
+           (errored 0))
+      (with-current-buffer (get-buffer-create my/eudic-review-buffer)
+        (erase-buffer)
+        (insert (format "Eudic Daily Review (%s)\n\n"
+                        (format-time-string "%Y-%m-%d"))))
+      (pop-to-buffer my/eudic-review-buffer)
+      (if (= total 0)
+          (my/eudic--append-buffer "No words (category_id=%s)." my/eudic-review-studylist-id)
+        (cl-labels
+            ((next-word (remaining)
+               (if (null remaining)
+                   (progn
+                     (my/eudic--append-buffer
+                      "\nDone. Total: %d, PASS: %d, FAIL: %d, ERROR: %d"
+                      total passed failed errored)
+                     (message "Eudic review done: total=%d pass=%d fail=%d error=%d"
+                              total passed failed errored))
+                 (let ((word (car remaining)))
+                   (my/eudic--append-buffer "Reviewing: %s" word)
+                   (my/eudic--review-one
+                    word
+                    (lambda (result)
+                      (cond ((eq result 'pass)
+                             (setq passed (1+ passed)))
+                            ((eq result 'fail)
+                             (setq failed (1+ failed)))
+                            (t
+                             (setq errored (1+ errored))))
+                      (next-word (cdr remaining))))))))
+          (next-word words))))))
+
+(defun my/eudic-review-debug-api ()
+  "Dump raw Eudic API payloads for troubleshooting."
+  (interactive)
+  (let* ((url "https://api.frdic.com/api/open/v1/studylist/words")
+         (base-params `(("language" . ,my/eudic-review-language)
+                        ("category_id" . ,(number-to-string my/eudic-review-studylist-id))
+                        ("page" . "1")
+                        ("page_size" . "20")))
+         (page1 (my/eudic--request-json-sync url :type "GET" :params base-params))
+         (all (my/eudic--fetch-all-studylist-words))
+         (buf (get-buffer-create "*Eudic API Debug*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "GET .../studylist/words?language=&category_id=&page=&page_size=\n\n")
+      (insert "=== Page 1 ===\n\n")
+      (insert (pp-to-string page1))
+      (insert (format "\n\n=== Paginated total: %d entries ===\n" (length all))))
+    (pop-to-buffer buf)))
+
+(map! :leader
+      (:prefix ("n" . "notes")
+       :desc "Eudic daily review" "E" #'my/eudic-review-daily-words))
