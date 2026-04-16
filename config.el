@@ -291,10 +291,7 @@
  #'evil-write-all
  :desc "Translate word"
  "sw"
- (lambda (str &optional arg)
-   (interactive (list (doom-thing-at-point-or-region 'word) current-prefix-arg))
-   (evil-ex (format! "!fy %s" (if str str "")))
-   )
+ #'paw-eudic-search-details
  :desc "open quick calc" "oc" #'quick-calc
  ;; :desc "open calendar" "oC" #'calendar
  :desc "open calc" "oC" #'calc
