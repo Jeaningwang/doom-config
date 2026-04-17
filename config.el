@@ -837,7 +837,7 @@
   ;; --- 配置 2：ChatGPT (自定义 Server/中转) ---
   (setq gptel-openai-custom-backend
         (gptel-make-openai "Custom-ChatGPT"
-          :host "api.chatanywhere.org"      ; 这里填写你的自定义服务器域名 (不带 http://)
+          :host "api.chatanywhere.tech"      ; 这里填写你的自定义服务器域名 (不带 http://)
           :endpoint "/v1/chat/completions"  ; 标准 OpenAI 路径
           :stream t
           :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
@@ -847,7 +847,7 @@
   ;; --- 配置3 :Claude ---
   (setq claude-custom-backend
         (gptel-make-anthropic "Custom-Claude"
-          :host "api.chatanywhere.org"
+          :host "api.chatanywhere.tech"
           :endpoint "/v1/chat/completions"
           :stream t
           :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
@@ -1545,3 +1545,330 @@ Uses a hash memo and optional `my/eudic-review-note-due-max-lookups'."
 (map! :leader
       (:prefix ("n" . "notes")
        :desc "Eudic daily review" "E" #'my/eudic-review-daily-words))
+
+;;---------------------------------------------------------------------------
+;;------------------------- Anki + paraOrg workflow -------------------------
+;;---------------------------------------------------------------------------
+(after! (org gptel)
+  (require 'json)
+  (require 'subr-x)
+  (require 'url)
+  (require 'cl-lib)
+
+  (defgroup my/anki nil
+    "Anki daily report and paraOrg card automation."
+    :group 'applications)
+
+  (defcustom my/anki-connect-url "http://127.0.0.1:8765"
+    "Anki-Connect endpoint."
+    :type 'string
+    :group 'my/anki)
+
+  (defcustom my/anki-default-deck "Default"
+    "Fallback deck name for auto-created cards."
+    :type 'string
+    :group 'my/anki)
+
+  (defcustom my/anki-default-model "Basic"
+    "Anki note type used when creating cards."
+    :type 'string
+    :group 'my/anki)
+
+  (defcustom my/paraorg-directory org-directory
+    "Directory containing paraOrg files."
+    :type 'directory
+    :group 'my/anki)
+
+  (defcustom my/paraorg-file-regexp "\\.org\\'"
+    "Regexp used to pick paraOrg files."
+    :type 'regexp
+    :group 'my/anki)
+
+  (defun my/anki--request (action &optional params)
+    "Call Anki-Connect ACTION with PARAMS and return result."
+    (let* ((payload (encode-coding-string
+                     (json-encode
+                      `(("action" . ,action)
+                        ("version" . 6)
+                        ("params" . ,(or params (make-hash-table)))))
+                     'utf-8))
+           (url-request-method "POST")
+           (url-request-extra-headers '(("Content-Type" . "application/json; charset=utf-8")))
+           (url-request-data payload)
+           ;; Always bypass proxy for local Anki-Connect endpoint.
+           (url-proxy-services
+            (append '(("no_proxy" . "^\\(localhost\\|127\\.0\\.0\\.1\\)$"))
+                    (cl-remove-if (lambda (kv)
+                                    (equal (car-safe kv) "no_proxy"))
+                                  (copy-sequence url-proxy-services))))
+           (buf (url-retrieve-synchronously my/anki-connect-url t t 10)))
+      (unless buf
+        (error "Cannot reach Anki-Connect at %s" my/anki-connect-url))
+      (unwind-protect
+          (with-current-buffer buf
+            (goto-char (point-min))
+            (unless (re-search-forward "\r?\n\r?\n" nil t)
+              (error "Invalid Anki-Connect response"))
+            (let* ((json-object-type 'alist)
+                   (json-array-type 'list)
+                   (json-key-type 'symbol)
+                   (obj (json-read))
+                   (err (alist-get 'error obj))
+                   (res (alist-get 'result obj)))
+              (when err
+                (error "Anki-Connect error: %s" err))
+              res))
+        (kill-buffer buf))))
+
+  (defun my/anki--start-of-today ()
+    "Return start of local day as Emacs time object."
+    (let* ((dt (decode-time (current-time))))
+      (encode-time 0 0 0 (decoded-time-day dt) (decoded-time-month dt) (decoded-time-year dt))))
+
+  (defun my/anki--time-ms (tm)
+    "Convert time object TM to unix milliseconds."
+    (truncate (* 1000 (float-time tm))))
+
+  (defun my/anki--strip-html (s)
+    "Remove HTML tags from S."
+    (let ((txt (replace-regexp-in-string "<[^>]*>" "" (or s ""))))
+      (string-trim (replace-regexp-in-string "[ \t\n\r]+" " " txt))))
+
+  (defun my/anki--chunk (lst n)
+    "Split LST into chunks of N."
+    (let ((out '()))
+      (while lst
+        (push (cl-subseq lst 0 (min n (length lst))) out)
+        (setq lst (nthcdr n lst)))
+      (nreverse out)))
+
+  (defun my/anki--format-review-type (v)
+    "Format review type code V."
+    (pcase v
+      (0 "learn")
+      (1 "review")
+      (2 "relearn")
+      (3 "cram")
+      (_ (format "%s" v))))
+
+  (defun my/anki--normalize-review-row (row)
+    "Normalize cardReviews ROW to an alist shape.
+Supports both object form and 9-tuple array/list form:
+[reviewTime cardId usn ease ivl lastIvl factor duration type]."
+    (cond
+     ;; Newer/object style.
+     ((and (listp row) (assoc 'cardId row))
+      `((reviewId . ,(or (alist-get 'reviewId row) (alist-get 'id row) 0))
+        (cardId . ,(alist-get 'cardId row))
+        (ease . ,(or (alist-get 'ease row) ""))
+        (reviewDuration . ,(or (alist-get 'reviewDuration row) (alist-get 'time row) ""))
+        (reviewType . ,(or (alist-get 'reviewType row) (alist-get 'type row) ""))))
+     ;; Legacy/list style.
+     ((and (listp row) (>= (length row) 9))
+      `((reviewId . ,(or (nth 0 row) 0))
+        (cardId . ,(nth 1 row))
+        (ease . ,(or (nth 3 row) ""))
+        (reviewDuration . ,(or (nth 7 row) ""))
+        (reviewType . ,(or (nth 8 row) ""))))
+     ;; Vector style (defensive).
+     ((and (vectorp row) (>= (length row) 9))
+      `((reviewId . ,(or (aref row 0) 0))
+        (cardId . ,(aref row 1))
+        (ease . ,(or (aref row 3) ""))
+        (reviewDuration . ,(or (aref row 7) ""))
+        (reviewType . ,(or (aref row 8) ""))))
+     (t nil)))
+
+  (defun my/anki--get-today-reviews ()
+    "Return plist with :details and :summary for today's reviews."
+    (let* ((start-ms (my/anki--time-ms (my/anki--start-of-today)))
+           (end-ms (my/anki--time-ms (time-add (my/anki--start-of-today) (days-to-time 1))))
+           (decks (my/anki--request "deckNames"))
+           (all-reviews '()))
+      (dolist (deck decks)
+        (let ((rows (ignore-errors
+                      (my/anki--request "cardReviews"
+                                        `(("deck" . ,deck) ("startID" . ,start-ms))))))
+          (when (listp rows)
+            (setq all-reviews (nconc all-reviews (delq nil (mapcar #'my/anki--normalize-review-row rows)))))))
+      (setq all-reviews
+            (cl-remove-if-not
+             (lambda (r)
+               (let ((rid (or (alist-get 'reviewId r) 0)))
+                 (and (>= rid start-ms) (< rid end-ms))))
+             all-reviews))
+      (let* ((card-ids (delete-dups
+                        (delq nil (mapcar (lambda (r) (alist-get 'cardId r)) all-reviews))))
+             (info-map (make-hash-table :test 'equal)))
+        (dolist (ids (my/anki--chunk card-ids 300))
+          (dolist (ci (my/anki--request "cardsInfo" `(("cards" . ,(vconcat ids)))))
+            (puthash (alist-get 'cardId ci) ci info-map)))
+        (let ((detail-rows '())
+              (summary-map (make-hash-table :test 'equal)))
+          (dolist (r (sort (copy-sequence all-reviews)
+                           (lambda (a b) (< (alist-get 'reviewId a) (alist-get 'reviewId b)))))
+            (let* ((cid (alist-get 'cardId r))
+                   (info (gethash cid info-map))
+                   (deck (or (alist-get 'deckName info) ""))
+                   (front (my/anki--strip-html (or (alist-get 'question info) "")))
+                   (ts (seconds-to-time (/ (float (alist-get 'reviewId r)) 1000.0)))
+                   (time-str (format-time-string "%Y-%m-%d %H:%M:%S" ts)))
+              (push (list cid deck time-str
+                          (my/anki--format-review-type (alist-get 'reviewType r))
+                          (or (alist-get 'ease r) "")
+                          (or (alist-get 'reviewDuration r) "")
+                          front)
+                    detail-rows)
+              (let ((cur (gethash cid summary-map)))
+                (if cur
+                    (progn
+                      (setf (nth 2 cur) (1+ (nth 2 cur)))
+                      (setf (nth 4 cur) time-str))
+                  (puthash cid (list cid deck 1 time-str time-str front) summary-map)))))
+          (list :details (nreverse detail-rows)
+                :summary (hash-table-values summary-map))))))
+
+  (defun my/anki--insert-org-table (headers rows)
+    "Insert an Org table with HEADERS and ROWS at point."
+    (insert "|" (mapconcat (lambda (h) (format " %s " h)) headers "|") "|\n")
+    (insert "|" (mapconcat (lambda (_) "---") headers "|") "|\n")
+    (dolist (row rows)
+      (insert "|" (mapconcat (lambda (cell) (format " %s " (or cell "")))
+                             (mapcar (lambda (x) (format "%s" x)) row)
+                             "|")
+              "|\n"))
+    (when (derived-mode-p 'org-mode)
+      (org-table-align)))
+
+  (defun my/anki-insert-today-review-report ()
+    "Insert today's Anki report at point (detail + unique summary)."
+    (interactive)
+    (let* ((report (my/anki--get-today-reviews))
+           (details (plist-get report :details))
+           (summary (plist-get report :summary))
+           (today (format-time-string "%Y-%m-%d")))
+      (insert (format "* Anki Review Report (%s)\n" today))
+      (insert "** Review Detail (revlog-like)\n")
+      (my/anki--insert-org-table
+       '("cardId" "deck" "reviewTime" "reviewType" "ease" "durationMs" "card")
+       details)
+      (insert "\n** Unique Cards Summary\n")
+      (my/anki--insert-org-table
+       '("cardId" "deck" "reviews" "firstReview" "lastReview" "card")
+       summary)
+      (insert "\n")
+      (message "Inserted Anki report: detail=%d unique=%d"
+               (length details) (length summary))))
+
+  (defun my/anki--collect-today-paraorg-text ()
+    "Collect text from today's modified org files under `my/paraorg-directory'."
+    (let* ((start (my/anki--start-of-today))
+           (files (directory-files-recursively my/paraorg-directory my/paraorg-file-regexp))
+           (chunks '()))
+      (dolist (f files)
+        (let* ((attr (file-attributes f))
+               (mtime (file-attribute-modification-time attr)))
+          (when (time-less-p start mtime)
+            (with-temp-buffer
+              (insert-file-contents f)
+              (push (format "### FILE: %s\n%s\n" f (buffer-string)) chunks)))))
+      (string-join (nreverse chunks) "\n")))
+
+  (defun my/anki--extract-json-block (s)
+    "Extract JSON payload from model response S."
+    (let* ((txt (string-trim (or s "")))
+           (fenced (when (string-match "```json\\([[:ascii:][:nonascii:]\n\r\t ]*?\\)```" txt)
+                     (string-trim (match-string 1 txt)))))
+      (or fenced txt)))
+
+  (defun my/anki--build-add-note-obj (item)
+    "Convert ITEM alist into Anki addNote object."
+    (let* ((front (string-trim (or (alist-get 'front item) "")))
+           (back (string-trim (or (alist-get 'back item) "")))
+           (deck (string-trim (or (alist-get 'deck item) "")))
+           (tags (alist-get 'tags item))
+           (tags-list (cond ((vectorp tags) (append tags nil))
+                            ((listp tags) tags)
+                            (t '()))))
+      (when (and (not (string-empty-p front)) (not (string-empty-p back)))
+        `(("deckName" . ,(if (string-empty-p deck) my/anki-default-deck deck))
+          ("modelName" . ,my/anki-default-model)
+          ("fields" . (("Front" . ,front) ("Back" . ,back)))
+          ("tags" . ,(vconcat (mapcar (lambda (x) (format "%s" x)) tags-list)))
+          ("options" . (("allowDuplicate" . :json-false)))))))
+
+  (defun my/anki--ai-generate-notes (raw-text done)
+    "Use gptel to transform RAW-TEXT into card JSON and call DONE."
+    (let ((prompt
+           (format
+            (concat
+             "Transform the following Org content into flashcards.\n"
+             "Return ONLY JSON array.\n"
+             "Each item must be: {\"front\":\"...\",\"back\":\"...\",\"tags\":[...],\"deck\":\"...\"}\n"
+             "Rules:\n"
+             "1) Build concise, testable Front.\n"
+             "2) Back should contain direct answer plus key context.\n"
+             "3) Infer tags from topic, language, and source.\n"
+             "4) Deck can be empty string if unknown.\n"
+             "5) Ignore low-information lines.\n\n"
+             "Org content:\n%s")
+            raw-text)))
+      (gptel-request
+          prompt
+        :system "You are an expert learning designer and Anki card author. Output valid JSON only."
+        :callback
+        (lambda (response &rest _)
+          (condition-case err
+              (let* ((json-str (my/anki--extract-json-block (format "%s" response)))
+                     (items (json-parse-string json-str :array-type 'list :object-type 'alist)))
+                (funcall done items nil))
+            (error
+             (funcall done nil (format "%S" err))))))))
+
+  (defun my/anki--submit-notes (items)
+    "Send ITEMS to Anki via addNotes."
+    (let* ((note-objs (delq nil (mapcar #'my/anki--build-add-note-obj items)))
+           (result (my/anki--request "addNotes" `(("notes" . ,(vconcat note-objs)))))
+           (ok 0)
+           (fail 0))
+      (dolist (id result)
+        (if id (setq ok (1+ ok)) (setq fail (1+ fail))))
+      (list ok fail (length note-objs))))
+
+  (defun my/anki-create-cards-from-region (beg end)
+    "Generate cards from current region and submit to Anki."
+    (interactive "r")
+    (let ((text (string-trim (buffer-substring-no-properties beg end))))
+      (if (string-empty-p text)
+          (user-error "Empty region")
+        (message "Generating cards from region via gptel...")
+        (my/anki--ai-generate-notes
+         text
+         (lambda (items err)
+           (if err
+               (message "AI parsing failed: %s" err)
+             (pcase-let ((`(,ok ,fail ,total) (my/anki--submit-notes items)))
+               (message "Anki import done: generated=%d success=%d failed=%d"
+                        total ok fail))))))))
+
+  (defun my/anki-create-cards-from-paraorg-today ()
+    "Auto-generate cards from today's paraOrg updates and submit to Anki."
+    (interactive)
+    (let ((text (my/anki--collect-today-paraorg-text)))
+      (if (string-empty-p text)
+          (message "No paraOrg files changed today in %s" my/paraorg-directory)
+        (message "Generating cards from today's paraOrg files via gptel...")
+        (my/anki--ai-generate-notes
+         text
+         (lambda (items err)
+           (if err
+               (message "AI parsing failed: %s" err)
+             (pcase-let ((`(,ok ,fail ,total) (my/anki--submit-notes items)))
+               (message "Anki import done: generated=%d success=%d failed=%d"
+                        total ok fail))))))))
+
+  (map! :leader
+        (:prefix ("n" . "notes")
+         :desc "Insert Anki daily report" "k r" #'my/anki-insert-today-review-report
+         :desc "Anki cards from paraOrg today" "k p" #'my/anki-create-cards-from-paraorg-today
+         :desc "Anki cards from region" "k s" #'my/anki-create-cards-from-region)))
