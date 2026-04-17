@@ -1872,3 +1872,44 @@ Supports both object form and 9-tuple array/list form:
          :desc "Insert Anki daily report" "k r" #'my/anki-insert-today-review-report
          :desc "Anki cards from paraOrg today" "k p" #'my/anki-create-cards-from-paraorg-today
          :desc "Anki cards from region" "k s" #'my/anki-create-cards-from-region)))
+
+
+;;---------------------------------------------------------------------------
+;;------------------------- alfred workflow ---------------------------------
+;;---------------------------------------------------------------------------
+;; 确保 Emacs server 在运行（如果还没开的话）
+(unless (server-running-p)
+  (server-start))
+
+;; Alfred 调用的入口函数
+(defun my/alfred-gptel-send (prompt)
+  "Send PROMPT to gptel from Alfred.
+  Opens or reuses the *Alfred* gptel buffer, ensures Emacs is visible
+  in the foreground, and sends the prompt."
+  (interactive)
+  (require 'gptel)
+  (let ((buffer (gptel "Alfred")))
+    ;; 1. 如果 Emacs 没有可见窗口（比如后台 daemon），先创建一个
+    (unless (visible-frame-list)
+      (make-frame))
+    ;; 2. 让当前 frame 获取输入焦点
+    (select-frame-set-input-focus (selected-frame))
+    ;; 3. 显示并切换到 *Alfred* buffer
+    (pop-to-buffer buffer '((display-buffer-reuse-window
+                             display-buffer-same-window)
+                            (inhibit-same-window . nil)))
+    ;; 4. 插入 prompt 并发送
+    (with-current-buffer buffer
+      (goto-char (point-max))
+      (unless (bolp) (insert "\n"))
+      (insert prompt)
+      (gptel-send))
+    ;; 5. 在 macOS 上把 Emacs 应用提到最前台
+    (when (memq window-system '(ns mac))
+      (cond ((fboundp 'ns-raise-emacs)
+             (ns-raise-emacs))
+            ((fboundp 'do-applescript)
+             (do-applescript "tell application \"Emacs\" to activate"))
+            (t
+             (call-process "osascript" nil 0 nil
+                           "-e" "tell application \"Emacs\" to activate"))))))
