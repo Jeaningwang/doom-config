@@ -842,15 +842,17 @@
           :stream t
           :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
           ;; :key (getenv "CUSTOM_CHATANYWHERE_PAID_API_KEY")
-          :models '(gpt-4o gpt-4-turbo gpt-3.5-turbo))) ; 定义可选模型
+          :models '(gpt-4o gpt-4-turbo gpt-3.5-turbo gpt-5-mini))) ; 定义可选模型
 
-  ;; --- 配置3 :Claude ---
+  ;; --- 配置3 :MiniMax ---
   (setq claude-custom-backend
-        (gptel-make-anthropic "Custom-Claude"
-          :host "api.chatanywhere.tech"
+        (gptel-make-openai "Custom-Minimax"
+          :host "api.minimax.chat"
           :endpoint "/v1/chat/completions"
           :stream t
-          :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
+          :key (getenv "MINIMAX_TOKEN_PLAN_API_KEY")
+          :models '(MiniMax-M2.7 MiniMax-M2.7-highspeed MiniMax-M2.5)
+          ;; :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
           ;; :key (getenv "CUSTOM_CHATANYWHERE_PAID_API_KEY")
           ))
 
@@ -860,6 +862,7 @@
 
 约束：
 1. 自检：提交前核对功能与逻辑正确性。
+2. 英文翻译： 如何我只给你一段英文句子，你就将其翻译成中文，并对其中的3-4个重点词语进行详细解释。
 "))
 
   (add-to-list 'gptel-directives '(编码助手 . "
@@ -1878,8 +1881,8 @@ Supports both object form and 9-tuple array/list form:
 ;;------------------------- alfred workflow ---------------------------------
 ;;---------------------------------------------------------------------------
 ;; 确保 Emacs server 在运行（如果还没开的话）
-(unless (server-running-p)
-  (server-start))
+                                        ; (unless (server-running-p)
+                                        ; (server-start))
 
 ;; Alfred 调用的入口函数
 (defun my/alfred-gptel-send (prompt)
