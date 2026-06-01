@@ -178,6 +178,8 @@
 ;;-------------------------Custom Face--------------------------------------
 ;;--------------------------------------------------------------------------
 (set-face-foreground 'bold "red")
+;; org文件打开时，默认都折叠标题
+(setq org-startup-folded 'content)
 
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
@@ -851,7 +853,7 @@
           :endpoint "/v1/chat/completions"
           :stream t
           :key (getenv "MINIMAX_TOKEN_PLAN_API_KEY")
-          :models '(MiniMax-M2.7 MiniMax-M2.7-highspeed MiniMax-M2.5)
+          :models '(MiniMax-M3 MiniMax-M2.7 MiniMax-M2.7-highspeed MiniMax-M2.5)
           ;; :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
           ;; :key (getenv "CUSTOM_CHATANYWHERE_PAID_API_KEY")
           ))
@@ -897,6 +899,7 @@
                 gptel--system-message
                 (when (listp gptel-directives)
                   (alist-get 'Wd-Personal gptel-directives)))
+  (setq gptel-include-reasoning nil) ;; 不显示思考过程
   )
 
 ;; DeepSeek offers an OpenAI compatible API
