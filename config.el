@@ -323,10 +323,12 @@
  :n "j" (lambda () (interactive)
           (evil-next-line)
           (evil-scroll-line-to-center nil)
+          ;; (evil-scroll-line-to-top nil)
           )
  :n "k" (lambda () (interactive)
           (evil-previous-line)
           (evil-scroll-line-to-center nil)
+          ;; (evil-scroll-line-to-top nil)
           )
  :leader :prefix ("e" . "custom") ;; 自定义的快捷键
  :desc "search node roam" "f" #'org-roam-node-find ;; 搜索 roam-node
@@ -865,6 +867,7 @@
 约束：
 1. 自检：提交前核对功能与逻辑正确性。
 2. 英文翻译： 如何我只给你一段英文句子，你就将其翻译成中文，并对其中的3-4个重点词语进行详细解释。
+3. 回答的格式要使用org-mode的格式，并且标题级别要小于问题的级别。
 "))
 
   (add-to-list 'gptel-directives '(编码助手 . "
