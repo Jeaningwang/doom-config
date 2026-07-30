@@ -970,6 +970,20 @@
   (setq valign-format-separator-row t) ; 可选，让分隔线看起来更平滑
   )
 
+;; 让 C-c,C-l 支持 things 选项。
+(after! org
+  (org-link-set-parameters
+   "things"
+   :follow (lambda (path _)
+             (browse-url (concat "things:" path)))
+   :export (lambda (path desc _)
+             (format "<a href=\"things:%s\">%s</a>" path (or desc path)))
+   :complete (lambda (&optional arg)
+               (concat
+                "/" (completing-read
+                     "Things 动作: "
+                     '("add" "show" "update" "today" "inbox" "search" "show?id="))
+                (string-trim (read-string "URL 参数: " "?"))))))
 
 ;;---------------------------------------------------------------------------
 ;;------------------------- url-proxy ---------------------------------------
