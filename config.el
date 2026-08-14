@@ -846,7 +846,7 @@
           :stream t
           :key (getenv "CUSTOM_CHAT_GPT_API_KEY")
           ;; :key (getenv "CUSTOM_CHATANYWHERE_PAID_API_KEY")
-          :models '(gpt-4o gpt-4-turbo gpt-3.5-turbo gpt-5-mini))) ; 定义可选模型
+          :models '(gpt-4o gpt-4-turbo gpt-3.5-turbo gpt-5-mini gpt-5.4-mini))) ; 定义可选模型
 
   ;; --- 配置3 :MiniMax ---
   (setq claude-custom-backend
@@ -866,8 +866,7 @@
 
 约束：
 1. 自检：提交前核对功能与逻辑正确性。
-2. 英文翻译： 如何我只给你一段英文句子，你就将其翻译成中文，并对其中的3-4个重点词语进行详细解释。
-3. 回答的格式要使用org-mode的格式，并且标题级别要小于问题的级别。
+2. 回答的格式要使用org-mode的格式，并且标题级别要小于问题的级别。
 "))
 
   (add-to-list 'gptel-directives '(编码助手 . "
@@ -898,7 +897,7 @@
   ;; `gptel-directives' must be an alist; if Customize saved a string (e.g. "en"),
   ;; (alist-get ... gptel-directives) signals wrong-type-argument listp.
   (setq-default gptel-backend gptel-openai-custom-backend
-                gptel-model 'gpt-3.5-turbo
+                gptel-model 'gpt-5.4-mini
                 gptel--system-message
                 (when (listp gptel-directives)
                   (alist-get 'Wd-Personal gptel-directives)))
